@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+config/database.php
+database.php
+*.log
+.vscode/

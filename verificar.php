@@ -1,10 +1,16 @@
-
 <?php
+declare(strict_types=1);
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('Este diagnóstico solo está disponible mediante PHP CLI.');
+}
+
 $controladores = PDO::getAvailableDrivers();
 
-if (in_array("pgsql", $controladores)) {
-    echo "<h2>¡PostgreSQL está habilitado en PHP!</h2>";
+if (in_array('pgsql', $controladores, true)) {
+    fwrite(STDOUT, 'El controlador PDO PostgreSQL está habilitado en PHP CLI.' . PHP_EOL);
 } else {
-    echo "<h2>PostgreSQL todavía no está habilitado.</h2>";
+    fwrite(STDERR, 'El controlador PDO PostgreSQL no está habilitado en PHP CLI.' . PHP_EOL);
+    exit(1);
 }
-?>

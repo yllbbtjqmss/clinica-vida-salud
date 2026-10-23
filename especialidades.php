@@ -1,29 +1,10 @@
 <?php
 // RF04 - Gestión de especialidades | Clínica Vida Salud
-// Prototipo local: integrar autenticación y permisos de administrador mediante RF01.
+// RF01: acceso exclusivo para administrador.
 declare(strict_types=1);
-session_start();
-
-try {
-    // Evita que un fallo de carga muestre la ruta privada antes del catch.
-    @require 'C:/xampp/config_clinica/database.php';
-    if (!isset($conexion) || !($conexion instanceof PDO)) {
-        throw new RuntimeException('Conexion PDO no disponible.');
-    }
-    if (!$conexion->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION)) {
-        throw new RuntimeException('No se pudo configurar PDO.');
-    }
-} catch (Throwable $ex) {
-    // No registrar mensajes, trazas ni datos de conexión; solo tipo y SQLSTATE.
-    $detalle = $ex instanceof PDOException ? 'PDOException' : 'Error de inicializacion';
-    $codigo = (string)$ex->getCode();
-    if ($ex instanceof PDOException && preg_match('/^[A-Z0-9]{5}$/D', $codigo) === 1) {
-        $detalle .= '; SQLSTATE ' . $codigo;
-    }
-    error_log('RF04: fallo al inicializar la conexion; ' . $detalle);
-    http_response_code(500);
-    exit('No se pudo establecer la conexión con la base de datos');
-}
+require_once __DIR__ . '/includes/auth.php';
+cvs_exigir_roles(['administrador']);
+$conexion = cvs_conexion();
 
 if (!isset($_SESSION['csrf_especialidades'])) {
     $_SESSION['csrf_especialidades'] = bin2hex(random_bytes(32));
@@ -242,7 +223,7 @@ button,.boton{display:inline-block;background:#146d73;color:#fff;border:0;border
 </style>
 </head>
 <body>
-<header><h1>Clínica Vida Salud</h1><p>RF04 · Gestión de especialidades médicas</p><p>Prototipo local de desarrollo · Pendiente de integrar RF01 y permisos de administrador</p></header>
+<header><h1>Clínica Vida Salud</h1><p>RF04 · Gestión de especialidades médicas</p><p>Entorno local de desarrollo · Acceso exclusivo para administrador</p></header>
 <main>
 <p><a class="boton secundario" href="index.php">← Volver al inicio</a></p>
 <?php if ($aviso !== ''): ?><div class="mensaje" role="status"><?= e($aviso) ?></div><?php endif; ?>

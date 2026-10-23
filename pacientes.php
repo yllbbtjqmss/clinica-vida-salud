@@ -1,9 +1,10 @@
 <?php
 // RF02 - Gestion de pacientes | Clinica Vida Salud
-// Version de desarrollo local: proteger con RF01 (autenticacion y permisos) antes de publicar.
+// RF01: acceso exclusivo para administrador y recepcionista.
 declare(strict_types=1);
-session_start();
-require 'C:/xampp/config_clinica/database.php';
+require_once __DIR__ . '/includes/auth.php';
+cvs_exigir_roles(['administrador', 'recepcionista']);
+$conexion = cvs_conexion();
 
 if (!isset($_SESSION['csrf_pacientes'])) {
     $_SESSION['csrf_pacientes'] = bin2hex(random_bytes(32));
@@ -141,7 +142,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($ex->getCode() === '23505') {
                     $errores[] = 'Ese CI ya esta registrado en otro paciente.';
                 } else {
-                    error_log($ex->getMessage());
+                    error_log('RF02: guardar_paciente'
+                        . (preg_match('/\A[A-Z0-9]{5}\z/', (string)$ex->getCode()) === 1
+                            ? '; SQLSTATE ' . (string)$ex->getCode() : ''));
                     $errores[] = 'No se pudo guardar la informacion.';
                 }
             }
@@ -161,7 +164,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: pacientes.php?estado=todos');
             exit;
         } catch (PDOException $ex) {
-            error_log($ex->getMessage());
+            error_log('RF02: cambiar_estado_paciente'
+                . (preg_match('/\A[A-Z0-9]{5}\z/', (string)$ex->getCode()) === 1
+                    ? '; SQLSTATE ' . (string)$ex->getCode() : ''));
             $errores[] = 'No fue posible cambiar el estado del paciente.';
         }
     } else {
@@ -179,7 +184,9 @@ if ($accionVista === 'editar' && $idVista > 0) {
             $datos = datosFormulario($pacienteEditado);
         }
     } catch (PDOException $ex) {
-        error_log($ex->getMessage());
+        error_log('RF02: abrir_ficha_paciente'
+            . (preg_match('/\A[A-Z0-9]{5}\z/', (string)$ex->getCode()) === 1
+                ? '; SQLSTATE ' . (string)$ex->getCode() : ''));
         $errores[] = 'No se pudo abrir la ficha del paciente.';
         $accionVista = 'nuevo';
     }
@@ -201,7 +208,9 @@ if ($accionVista === 'historial' && $idVista > 0) {
             $errores[] = 'No se encontro ese paciente.';
         }
     } catch (PDOException $ex) {
-        error_log($ex->getMessage());
+        error_log('RF02: consultar_historial_paciente'
+            . (preg_match('/\A[A-Z0-9]{5}\z/', (string)$ex->getCode()) === 1
+                ? '; SQLSTATE ' . (string)$ex->getCode() : ''));
         $errores[] = 'No se pudo consultar el historial de citas.';
     }
 }
@@ -223,7 +232,9 @@ try {
     $consulta->execute($parametrosLista);
     $lista = $consulta->fetchAll();
 } catch (PDOException $ex) {
-    error_log($ex->getMessage());
+    error_log('RF02: listar_pacientes'
+        . (preg_match('/\A[A-Z0-9]{5}\z/', (string)$ex->getCode()) === 1
+            ? '; SQLSTATE ' . (string)$ex->getCode() : ''));
     $lista = [];
     $errores[] = 'No fue posible consultar el listado.';
 }
@@ -250,13 +261,14 @@ button,.boton{display:inline-block;background:#146d73;color:white;border:0;borde
 <body>
 <header><h1>Clínica Vida Salud</h1><p>RF02 · Gestión de pacientes · Entorno local de desarrollo</p></header>
 <main>
+<p><a class="boton secundario" href="index.php">← Volver al inicio</a></p>
 <?php if ($aviso !== ''): ?><div class="mensaje"><?= e($aviso) ?></div><?php endif; ?>
 <?php foreach ($errores as $error): ?><div class="mensaje error"><?= e($error) ?></div><?php endforeach; ?>
 
 <?php if ($accionVista === 'historial' && $pacienteEditado): ?>
 <section class="panel">
 <h2>Historial de citas: <?= e($pacienteEditado['nombres'] . ' ' . $pacienteEditado['apellidos']) ?></h2>
-<p class="pequeno">Incluye citas canceladas e historicas. Solo deben poder consultarlo los perfiles autorizados cuando se implemente RF01.</p>
+<p class="pequeno">Incluye citas canceladas e historicas. Acceso exclusivo para administrador y recepcionista.</p>
 <div class="tabla"><table><thead><tr><th>Codigo</th><th>Fecha</th><th>Horario</th><th>Medico</th><th>Especialidad</th><th>Estado</th></tr></thead><tbody>
 <?php if (!$historial): ?><tr><td colspan="6">Este paciente aun no tiene citas.</td></tr><?php endif; ?>
 <?php foreach ($historial as $cita): ?><tr><td><?= e($cita['codigo']) ?></td><td><?= e($cita['fecha']) ?></td><td><?= e(substr($cita['hora_inicio'], 0, 5) . ' - ' . substr($cita['hora_fin'], 0, 5)) ?></td><td><?= e($cita['medico_nombres'] . ' ' . $cita['medico_apellidos']) ?></td><td><?= e($cita['especialidad']) ?></td><td><?= e($cita['estado']) ?></td></tr><?php endforeach; ?>

@@ -430,10 +430,10 @@ try {
             <table>
                 <thead>
                     <tr>
-                        <th>Código</th>
+                        <th>CA3digo</th>
                         <th>Paciente</th>
                         <th>CI</th>
-                        <th>Médico</th>
+                        <th>MAcdico</th>
                         <th>Registro</th>
                         <th>Especialidad</th>
                         <th>Fecha</th>
@@ -441,17 +441,18 @@ try {
                         <th>Hora fin</th>
                         <th>Estado</th>
                         <th>Motivo</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if (empty($listaCitas)): ?>
-                    <tr><td colspan="11">No hay citas para mostrar.</td></tr>
+                    <tr><td colspan="12">No hay citas para mostrar.</td></tr>
                 <?php else: ?>
                     <?php foreach ($listaCitas as $c): ?>
                         <tr>
                             <td><?= e($c['codigo']) ?></td>
                             <td><?= e($c['paciente']) ?></td>
-                            <td><?= e($c['ci'] ?? '—') ?></td>
+                            <td><?= e($c['ci'] ?? '�?"') ?></td>
                             <td><?= e($c['medico']) ?></td>
                             <td><?= e($c['registro_profesional']) ?></td>
                             <td><?= e($c['especialidad']) ?></td>
@@ -459,7 +460,14 @@ try {
                             <td><?= e(substr($c['hora_inicio'], 0, 5)) ?></td>
                             <td><?= e(substr($c['hora_fin'], 0, 5)) ?></td>
                             <td><?= e($c['estado']) ?></td>
-                            <td><?= $c['motivo'] !== null ? e($c['motivo']) : '—' ?></td>
+                            <td><?= $c['motivo'] !== null ? e($c['motivo']) : '�?"' ?></td>
+                            <td>
+                                <?php if (in_array($c['estado'], ['programada', 'confirmada'], true)): ?>
+                                    <a class="btn" style="padding:8px 14px;font-size:13px" href="reprogramar_cita.php?id_cita=<?= e($c['id_cita']) ?>">Reprogramar</a>
+                                <?php else: ?>
+                                    <span style="color:#6b7f85">-</span>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>

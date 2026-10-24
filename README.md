@@ -222,9 +222,9 @@ _Aún no se han agregado capturas del sistema. Se incorporarán a `documentacion
 
 ## 🧑‍💻 Integrantes del proyecto
 
-- **Integrante 1:** [NOMBRE COMPLETO]
-- **Integrante 2:** [NOMBRE COMPLETO]
-- **Grupo:** [NÚMERO DE GRUPO]
+- **Integrante 1:** DURAN PEREZ MELISSA
+- **Integrante 2:** VASQUEZ CORDERO ANGELICA YANDIRA
+- **Grupo:** 17
 
 ---
 

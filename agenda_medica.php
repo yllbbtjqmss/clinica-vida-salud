@@ -4,8 +4,9 @@
  * Clínica Vida Salud
  */
 
-session_start();
-require 'C:/xampp/config_clinica/database.php';
+require_once __DIR__ . '/includes/auth.php';
+cvs_exigir_roles(['administrador', 'recepcionista']);
+$conexion = cvs_conexion();
 
 function e($value) {
     return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -109,7 +110,6 @@ if ($idMedicoSel && $fSel) {
         button, .btn{background:#146d73;color:white;border:0;border-radius:8px;padding:12px 22px;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block}
         .mensaje{border-radius:7px;padding:12px 15px;margin-bottom:15px;background:#e2f7e9}
         .error{background:#fce6e6}
-        .aviso-dev{background:#fff4e6;border:1px solid #f5d9a6;color:#7a4b00;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-weight:600}
         .resumen{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
         .pill{padding:8px 12px;border-radius:999px;background:#edf5f5;border:1px solid #c9d9dc;font-size:13px;font-weight:600}
         .tabla{overflow-x:auto}
@@ -147,7 +147,6 @@ if ($idMedicoSel && $fSel) {
 <main>
     <section class="panel">
         <h2>Consulta de agenda por médico</h2>
-        <div class="aviso-dev">Vista administrativa/de desarrollo. Hasta integrar RF01 (autenticación/roles) esta pantalla es de uso local.</div>
         <?php if ($aviso): ?><div class="mensaje"><?= e($aviso) ?></div><?php endif; ?>
         <?php foreach ($errores as $error): ?><div class="mensaje error"><?= e($error) ?></div><?php endforeach; ?>
         

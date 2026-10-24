@@ -314,7 +314,7 @@ button,.boton{display:inline-block;background:#146d73;color:white;border:0;borde
 <?php foreach ($lista as $paciente): ?>
 <tr><td><?= e($paciente['id_paciente']) ?></td><td><?= e($paciente['ci'] ?? '—') ?></td><td><?= e($paciente['nombres'] . ' ' . $paciente['apellidos']) ?></td><td><?= e($paciente['fecha_nacimiento']) ?></td><td><?= e($paciente['telefono']) ?></td><td><span class="etiqueta <?= esActivo($paciente['activo']) ? '' : 'inactivo' ?>"><?= esActivo($paciente['activo']) ? 'Activo' : 'Inactivo' ?></span></td>
 <td><div class="acciones">
-<a class="boton secundario" href="pacientes.php?accion=historial&amp;id=<?= e($paciente['id_paciente']) ?>">Historial</a>
+<a class="boton secundario" href="historial_citas.php?id_paciente=<?= e($paciente['id_paciente']) ?>">Historial</a>
 <?php if (esActivo($paciente['activo'])): ?>
 <a class="boton secundario" href="pacientes.php?accion=editar&amp;id=<?= e($paciente['id_paciente']) ?>">Editar</a>
 <form method="post" action="pacientes.php" onsubmit="return confirm('¿Desactivar este paciente? Se conservara su historial.');">

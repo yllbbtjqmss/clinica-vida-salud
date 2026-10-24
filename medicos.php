@@ -4,8 +4,9 @@
  * Clínica Vida Salud
  */
 
-session_start();
-require 'C:/xampp/config_clinica/database.php';
+require_once __DIR__ . '/includes/auth.php';
+cvs_exigir_roles(['administrador']);
+$conexion = cvs_conexion();
 
 // Generación de token CSRF
 if (empty($_SESSION['csrf_medicos'])) {

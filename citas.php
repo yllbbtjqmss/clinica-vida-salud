@@ -4,8 +4,29 @@
  * Clínica Vida Salud
  */
 
-session_start();
-require 'C:/xampp/config_clinica/database.php';
+require_once __DIR__ . '/includes/auth.php';
+
+$esEndpointJson = (isset($_GET['cargar_medicos']) && isset($_GET['id_especialidad']))
+    || (isset($_GET['cargar_bloques']) && isset($_GET['id_medico']) && isset($_GET['fecha']));
+
+if ($esEndpointJson) {
+    header('Content-Type: application/json; charset=UTF-8');
+    $usuarioJson = cvs_usuario_actual();
+    if ($usuarioJson === null) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Sesion no valida. Inicie sesion nuevamente.']);
+        exit;
+    }
+    if (!in_array($usuarioJson['rol'], ['administrador', 'recepcionista'], true)) {
+        http_response_code(403);
+        echo json_encode(['error' => 'No tiene permisos para este recurso.']);
+        exit;
+    }
+} else {
+    cvs_exigir_roles(['administrador', 'recepcionista']);
+}
+
+$conexion = cvs_conexion();
 
 // Generación de token CSRF
 if (empty($_SESSION['csrf_citas'])) {

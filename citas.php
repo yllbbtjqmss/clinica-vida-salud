@@ -28,6 +28,10 @@ if ($esEndpointJson) {
 
 $conexion = cvs_conexion();
 
+$zonaClinica = new DateTimeZone('America/La_Paz');
+$hoy = new DateTimeImmutable('today', $zonaClinica);
+$hoyYmd = $hoy->format('Y-m-d');
+
 // Generación de token CSRF
 if (empty($_SESSION['csrf_citas'])) {
     $_SESSION['csrf_citas'] = bin2hex(random_bytes(32));
@@ -67,7 +71,7 @@ $datos = [
     'id_paciente'     => '',
     'id_especialidad' => '',
     'id_medico'       => '',
-    'fecha'           => date('Y-m-d'),
+    'fecha'           => $hoyYmd,
     'hora_inicio'     => '',
     'motivo'          => ''
 ];
@@ -100,8 +104,10 @@ $bloquesDisponibles = [];
 if (isset($_GET['cargar_bloques']) && isset($_GET['id_medico']) && isset($_GET['fecha'])) {
     $idMedB = filter_var($_GET['id_medico'], FILTER_VALIDATE_INT);
     $fechaB = trim($_GET['fecha']);
-    $hoy = new DateTimeImmutable('today');
-    $fB = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaB);
+    $fB = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaB, $zonaClinica);
+    if ($fB && $fB->format('Y-m-d') !== $fechaB) {
+        $fB = false;
+    }
     if ($idMedB && $fB && $fB >= $hoy) {
         $diaSemana = (int)$fB->format('N'); // 1 lunes .. 7 domingo
         try {
@@ -124,7 +130,6 @@ if (isset($_GET['cargar_bloques']) && isset($_GET['id_medico']) && isset($_GET['
             $citasOcupadas = $cStmt->fetchAll();
             
             // Generar bloques
-            $now = new DateTimeImmutable('now');
             foreach ($horariosActivos as $hor) {
                 $dur = (int)$hor['duracion_minutos'];
                 if ($dur <= 0) continue;
@@ -140,7 +145,7 @@ if (isset($_GET['cargar_bloques']) && isset($_GET['id_medico']) && isset($_GET['
                     if ($bloqueFin > $finDia) break;
                     // No permitir horas que ya pasaron si es fecha actual
                     if ($fB == $hoy) {
-                        $ahora = new DateTimeImmutable('now');
+                        $ahora = new DateTimeImmutable('now', $zonaClinica);
                         $bloqueInicioDt = $cursor;
                         if ($bloqueInicioDt <= $ahora) {
                             $cursor = $bloqueFin;
@@ -197,22 +202,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $idPac = filter_var($datos['id_paciente'], FILTER_VALIDATE_INT);
         $idEsp = filter_var($datos['id_especialidad'], FILTER_VALIDATE_INT);
         $idMed = filter_var($datos['id_medico'], FILTER_VALIDATE_INT);
-        $fCita = DateTimeImmutable::createFromFormat('!Y-m-d', $datos['fecha']);
-        $hoy = new DateTimeImmutable('today');
+        $fCita = DateTimeImmutable::createFromFormat('!Y-m-d', $datos['fecha'], $zonaClinica);
+        $fechaCitaValida = $fCita !== false && $fCita->format('Y-m-d') === $datos['fecha'];
 
         if (!$idPac) $errores[] = 'Selecciona un paciente válido.';
         if (!$idEsp) $errores[] = 'Selecciona una especialidad.';
         if (!$idMed) $errores[] = 'Selecciona un médico.';
-        if (!$fCita || $fCita < $hoy) $errores[] = 'Selecciona una fecha válida (futura o actual).';
-        if ($datos['hora_inicio'] === '') $errores[] = 'Selecciona un bloque horario disponible.';
+        if (!$fechaCitaValida || $fCita < $hoy) $errores[] = 'Selecciona una fecha válida (futura o actual).';
+        if ($datos['hora_inicio'] === '' || !preg_match('/\A(?:0[0-9]|1[0-9]|2[0-3]):[0-5]\d\z/', $datos['hora_inicio'])) $errores[] = 'Selecciona un bloque horario disponible.';
 
         if ($datos['motivo'] !== '' && strlen($datos['motivo']) > 255) {
             $errores[] = 'El motivo supera la longitud permitida.';
         }
 
         if (!$errores && $fCita == $hoy && $datos['hora_inicio'] !== '') {
-            $ahora = new DateTimeImmutable('now');
-            $bloqIni = DateTimeImmutable::createFromFormat('Y-m-d H:i', $datos['fecha'] . ' ' . $datos['hora_inicio']);
+            $ahora = new DateTimeImmutable('now', $zonaClinica);
+            $bloqIni = DateTimeImmutable::createFromFormat('Y-m-d H:i', $datos['fecha'] . ' ' . $datos['hora_inicio'], $zonaClinica);
             if ($bloqIni && $bloqIni <= $ahora) {
                 $errores[] = 'No es posible reservar horas que ya pasaron.';
             }
@@ -240,37 +245,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Obtener horario activo para ese día
                 $diaSemana = (int)$fCita->format('N');
-                $hChk = $conexion->prepare("SELECT hora_inicio, hora_fin, duracion_minutos FROM horarios WHERE id_medico = :id_medico AND dia_semana = :dia_semana AND activo = TRUE");
+                $hChk = $conexion->prepare("SELECT hora_inicio, hora_fin, duracion_minutos FROM horarios WHERE id_medico = :id_medico AND dia_semana = :dia_semana AND activo = TRUE ORDER BY hora_inicio");
                 $hChk->bindValue(':id_medico', $idMed, PDO::PARAM_INT);
                 $hChk->bindValue(':dia_semana', $diaSemana, PDO::PARAM_INT);
                 $hChk->execute();
                 $horariosChk = $hChk->fetchAll();
                 if (empty($horariosChk)) throw new Exception('El médico no tiene horario activo para ese día');
 
-                // Calcular hora_fin
-                $durMin = (int)$horariosChk[0]['duracion_minutos'];
-                $bloqIniDt = DateTimeImmutable::createFromFormat('Y-m-d H:i', $datos['fecha'] . ' ' . $datos['hora_inicio']);
+                $bloqIniDt = DateTimeImmutable::createFromFormat('Y-m-d H:i', $datos['fecha'] . ' ' . $datos['hora_inicio'], $zonaClinica);
                 if (!$bloqIniDt) throw new Exception('Bloque horario inválido');
-                $bloqFinDt = $bloqIniDt->modify('+' . $durMin . ' minutes');
-                $horaFinCalc = $bloqFinDt->format('H:i:s');
 
-                // Verificar dentro de algún horario activo
-                $dentroHorario = false;
+                $horarioEncontrado = null;
+                $hcIniEncontrado = null;
                 foreach ($horariosChk as $hc) {
                     $hcIni = DateTimeImmutable::createFromFormat('H:i:s', $hc['hora_inicio']) ?: DateTimeImmutable::createFromFormat('H:i', substr($hc['hora_inicio'],0,5));
                     $hcFin = DateTimeImmutable::createFromFormat('H:i:s', $hc['hora_fin']) ?: DateTimeImmutable::createFromFormat('H:i', substr($hc['hora_fin'],0,5));
                     if (!$hcIni || !$hcFin) continue;
                     $hcIniDt = $fCita->setTime((int)$hcIni->format('H'), (int)$hcIni->format('i'));
                     $hcFinDt = $fCita->setTime((int)$hcFin->format('H'), (int)$hcFin->format('i'));
-                    if ($bloqIniDt >= $hcIniDt && $bloqFinDt <= $hcFinDt) {
-                        $dentroHorario = true;
+                    if ($bloqIniDt >= $hcIniDt && $bloqIniDt < $hcFinDt) {
+                        $horarioEncontrado = $hc;
+                        $hcIniEncontrado = $hcIniDt;
                         break;
                     }
                 }
-                if (!$dentroHorario) throw new Exception('El bloque seleccionado está fuera del horario de atención');
+                if (!$horarioEncontrado || !$hcIniEncontrado) throw new Exception('El bloque seleccionado está fuera del horario de atención');
+                $durMin = (int)$horarioEncontrado['duracion_minutos'];
+                if ($durMin <= 0) throw new Exception('Duración de horario inválida');
+                $diffMin = ($bloqIniDt->getTimestamp() - $hcIniEncontrado->getTimestamp()) / 60;
+                if ($diffMin < 0 || ($diffMin % $durMin) !== 0) throw new Exception('El bloque seleccionado no corresponde a un horario válido');
+                $bloqFinDt = $bloqIniDt->modify('+' . $durMin . ' minutes');
+
+                $hcFinF = DateTimeImmutable::createFromFormat('H:i:s', $horarioEncontrado['hora_fin']) ?: DateTimeImmutable::createFromFormat('H:i', substr($horarioEncontrado['hora_fin'],0,5));
+                $hcFinDtF = $fCita->setTime((int)$hcFinF->format('H'), (int)$hcFinF->format('i'));
+                if ($bloqFinDt > $hcFinDtF) throw new Exception('El bloque seleccionado está fuera del horario de atención');
+                $horaFinCalc = $bloqFinDt->format('H:i:s');
 
                 // Generar código único
-                $codigo = 'CITA-' . strtoupper(bin2hex(random_bytes(4))) . '-' . date('Ymd');
+                $codigo = 'CITA-' . strtoupper(bin2hex(random_bytes(4))) . '-' . $hoy->format('Ymd');
 
                 // Insertar (restricción EXCLUDE puede lanzar 23P01)
                 $sqlInsC = "INSERT INTO citas (codigo, id_paciente, id_medico, id_especialidad, fecha, hora_inicio, hora_fin, motivo, estado, creado_en, actualizado_en)
@@ -426,7 +438,7 @@ try {
                 </div>
                 <div>
                     <label for="fecha">Fecha *</label>
-                    <input id="fecha" type="date" name="fecha" required min="<?= date('Y-m-d') ?>" value="<?= e($datos['fecha']) ?>">
+                    <input id="fecha" type="date" name="fecha" required min="<?= e($hoyYmd) ?>" value="<?= e($datos['fecha']) ?>">
                 </div>
             </div>
             <div style="margin-top:18px">

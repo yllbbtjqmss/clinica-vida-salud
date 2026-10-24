@@ -27,6 +27,10 @@ if ($esEndpointJson) {
 
 $conexion = cvs_conexion();
 
+$zonaClinica = new DateTimeZone('America/La_Paz');
+$hoy = new DateTimeImmutable('today', $zonaClinica);
+$hoyYmd = $hoy->format('Y-m-d');
+
 // Generación de token CSRF
 if (empty($_SESSION['csrf_reprog'])) {
     $_SESSION['csrf_reprog'] = bin2hex(random_bytes(32));
@@ -78,6 +82,15 @@ if (!in_array($cita['estado'], ['programada', 'confirmada'], true)) {
     header('Location: citas.php');
     exit;
 }
+
+$inicioOriginal = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $cita['fecha'] . ' ' . $cita['hora_inicio'], $zonaClinica)
+    ?: DateTimeImmutable::createFromFormat('Y-m-d H:i', $cita['fecha'] . ' ' . substr($cita['hora_inicio'], 0, 5), $zonaClinica);
+$ahoraGuardia = new DateTimeImmutable('now', $zonaClinica);
+if (!$inicioOriginal || $inicioOriginal <= $ahoraGuardia) {
+    $_SESSION['aviso_citas'] = 'Esta cita ya ha transcurrido y no puede ser reprogramada.';
+    header('Location: citas.php');
+    exit;
+}
 if ($cita['medico_activo'] !== true && $cita['medico_activo'] !== 1 && $cita['medico_activo'] !== 't') {
     // En Postgres con PDO puede venir como bool true o 't' dependiendo; also check active
     // but be defensive
@@ -87,8 +100,10 @@ if ($cita['medico_activo'] !== true && $cita['medico_activo'] !== 1 && $cita['me
 $bloquesDisponibles = [];
 if (isset($_GET['cargar_bloques']) && isset($_GET['fecha'])) {
     $fechaB = trim($_GET['fecha']);
-    $hoy = new DateTimeImmutable('today');
-    $fB = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaB);
+    $fB = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaB, $zonaClinica);
+    if ($fB && $fB->format('Y-m-d') !== $fechaB) {
+        $fB = false;
+    }
     $idMedB = (int)$cita['id_medico'];
     if ($fB && $fB >= $hoy) {
         $diaSemana = (int)$fB->format('N');
@@ -126,7 +141,7 @@ if (isset($_GET['cargar_bloques']) && isset($_GET['fecha'])) {
                     $bloqueFin = $cursor->modify('+' . $dur . ' minutes');
                     if ($bloqueFin > $finDia) break;
                     if ($fB == $hoy) {
-                        $ahora = new DateTimeImmutable('now');
+                        $ahora = new DateTimeImmutable('now', $zonaClinica);
                         if ($cursor <= $ahora) {
                             $cursor = $bloqueFin;
                             continue;
@@ -173,17 +188,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fechaNueva = trim((string)($_POST['fecha'] ?? ''));
         $horaInicioNueva = trim((string)($_POST['hora_inicio'] ?? ''));
         
-        $fNueva = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaNueva);
-        $hoy = new DateTimeImmutable('today');
-        if (!$fNueva || $fNueva < $hoy) {
+        $fNueva = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaNueva, $zonaClinica);
+        $fechaNuevaValida = $fNueva !== false && $fNueva->format('Y-m-d') === $fechaNueva;
+        if (!$fechaNuevaValida || $fNueva < $hoy) {
             $errores[] = 'Selecciona una fecha válida (futura o actual).';
         }
-        if ($horaInicioNueva === '') {
+        if ($horaInicioNueva === '' || !preg_match('/\A(?:0[0-9]|1[0-9]|2[0-3]):[0-5]\d\z/', $horaInicioNueva)) {
             $errores[] = 'Selecciona un bloque horario disponible.';
         }
         if ($fNueva == $hoy && $horaInicioNueva !== '') {
-            $ahora = new DateTimeImmutable('now');
-            $bloqIniCheck = DateTimeImmutable::createFromFormat('Y-m-d H:i', $fechaNueva . ' ' . $horaInicioNueva);
+            $ahora = new DateTimeImmutable('now', $zonaClinica);
+            $bloqIniCheck = DateTimeImmutable::createFromFormat('Y-m-d H:i', $fechaNueva . ' ' . $horaInicioNueva, $zonaClinica);
             if ($bloqIniCheck && $bloqIniCheck <= $ahora) {
                 $errores[] = 'No es posible reprogramar a horas que ya pasaron.';
             }
@@ -222,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('El médico no tiene horario activo para ese día.');
                 }
                 
-                $bloqIniDt = DateTimeImmutable::createFromFormat('Y-m-d H:i', $fechaNueva . ' ' . $horaInicioNueva);
+                $bloqIniDt = DateTimeImmutable::createFromFormat('Y-m-d H:i', $fechaNueva . ' ' . $horaInicioNueva, $zonaClinica);
                 if (!$bloqIniDt) {
                     throw new Exception('Bloque horario inválido.');
                 }
@@ -262,8 +277,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('El bloque seleccionado está fuera del horario de atención.');
                 }
                 // Fecha/hora futura ya validada, pero asegurar
-                $ahoraChk = new DateTimeImmutable('now');
-                if ($bloqIniDt <= $ahoraChk && $fNueva == $hoy) {
+                $ahoraChk = new DateTimeImmutable('now', $zonaClinica);
+                if ($bloqIniDt <= $ahoraChk) {
                     throw new Exception('No es posible reprogramar a horas que ya pasaron.');
                 }
                 $horaFinCalc = $bloqFinDt->format('H:i:s');
@@ -406,7 +421,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="campos">
                 <div>
                     <label for="fecha">Nueva fecha *</label>
-                    <input id="fecha" type="date" name="fecha" required min="<?= date('Y-m-d') ?>">
+                    <input id="fecha" type="date" name="fecha" required min="<?= e($hoyYmd) ?>">
                 </div>
             </div>
             <div style="margin-top:18px">

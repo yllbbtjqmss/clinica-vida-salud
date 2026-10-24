@@ -331,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="assets/estilos.css">
 </head>
 <body>
-<?php require_once __DIR__ . '/includes/ui.php'; cvsu_area('citas', 'Reprogramar citas'); ?>
+<?php require_once __DIR__ . '/includes/ui.php'; cvsu_area('seleccionar_reprogramacion', 'Reprogramar citas'); ?>
 <main class="ui-contenido">
     <section class="panel">
         <h2>Reprogramar cita</h2>

@@ -368,6 +368,13 @@ button.btn-sec:hover,.boton.btn-sec:hover{filter:none;background:#CEDEE3}
 
 /* ---------- Citas: bloques de hora ---------- */
 .bloques{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin:8px 0 16px}
+.bloques p{
+  /* El mensaje informativo usa todo el ancho disponible en lugar de
+     quedar entrampado en una columna de 96px. */
+  grid-column:1 / -1;
+  margin:0;
+  padding:2px 4px;
+}
 .bloque{
   padding:9px 6px;
   border-radius:12px;
@@ -605,3 +612,309 @@ button.btn-sec:hover,.boton.btn-sec:hover{filter:none;background:#CEDEE3}
 /* ---------- Accesibilidad ---------- */
 :focus-visible{outline:3px solid var(--cv-4);outline-offset:2px}
 .cvs-solo-lectores{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ============================================================
+   Panel administrativo (dashboard)
+   ============================================================ */
+.dash-banner{
+  position:relative;
+  overflow:hidden;
+  display:flex;align-items:center;gap:20px;
+  border-radius:26px;
+  padding:30px 32px;
+  min-height:262px;
+  margin-bottom:22px;
+  background:linear-gradient(115deg,var(--cv-0) 0%,#063A48 45%,#075A63 100%);
+  color:#fff;
+  box-shadow:0 16px 40px rgba(4,34,43,.35);
+}
+.dash-banner-texto{flex:1;min-width:0;position:relative;z-index:2;max-width:50%}
+.dash-banner-imagen{
+  position:absolute;
+  right:0;
+  top:0;
+  height:100%;
+  width:58%;
+  object-fit:cover;
+  object-position:center;
+  z-index:1;
+  /* Fundido progresivo en el borde izquierdo: la ilustración nace del
+     fondo del banner sin costura, sin bordes ni divisiones. */
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.45) 8%,#000 24%);
+  mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.45) 8%,#000 24%);
+}
+.dash-banner-rol{
+  display:inline-block;
+  margin:0 0 10px;
+  padding:5px 14px;
+  border-radius:999px;
+  background:rgba(152,216,208,.18);
+  border:1px solid rgba(152,216,208,.35);
+  color:var(--cv-5);
+  font-size:12px;font-weight:700;letter-spacing:.4px;
+}
+.dash-banner h1{color:#fff;font-size:27px;margin:0 0 8px}
+.dash-banner p{margin:0;font-size:14px;color:#CFE7EA}
+
+.dash-kpis{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:18px;
+  margin-bottom:22px;
+}
+.dash-kpi{
+  display:flex;align-items:center;gap:16px;
+  background:var(--cv-blanco);
+  border:1px solid var(--cv-marco);
+  border-radius:20px;
+  padding:20px 22px;
+  box-shadow:var(--cv-sombra);
+}
+.dash-kpi-turquesa{background:linear-gradient(120deg,#F0FAF9,#FFFFFF);border-color:#C9E8E5}
+.dash-kpi-icono{
+  width:48px;height:48px;flex:0 0 48px;
+  border-radius:15px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--cv-3),var(--cv-2));
+  color:#fff;
+  box-shadow:0 8px 18px rgba(29,139,148,.30);
+}
+.dash-kpi-icono svg{width:22px;height:22px}
+.dash-kpi-num{font-size:34px;font-weight:800;color:var(--cv-0);line-height:1.05}
+.dash-kpi-titulo{font-size:13px;font-weight:700;color:var(--cv-sub)}
+.dash-kpi-link{
+  display:inline-block;margin-top:4px;
+  font-size:12.5px;font-weight:700;
+  color:var(--cv-2);text-decoration:none;
+}
+.dash-kpi-link:hover{text-decoration:underline}
+
+.dash-grid{
+  display:grid;
+  grid-template-columns:minmax(0,3fr) minmax(0,2fr);
+  gap:20px;
+  align-items:start;
+}
+.dash-col{display:flex;flex-direction:column;gap:20px;min-width:0}
+.dash-panel{
+  background:var(--cv-blanco);
+  border:1px solid var(--cv-marco);
+  border-radius:20px;
+  padding:24px;
+  box-shadow:var(--cv-sombra);
+  min-width:0;
+}
+.dash-cabecera{display:flex;align-items:center;gap:10px;margin:0 0 14px}
+.dash-cabecera-icono{
+  width:34px;height:34px;flex:0 0 34px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--cv-6);color:var(--cv-2);
+}
+.dash-cabecera-icono svg{width:17px;height:17px}
+.dash-cabecera h2{margin:0;font-size:17px}
+.dash-descripcion{margin:-8px 0 16px;font-size:12.5px;color:var(--cv-sub)}
+
+/* Calendario */
+.dash-cal-barra{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px}
+.dash-cal-titulo{font-size:17px;font-weight:800;color:var(--cv-0);text-transform:uppercase;letter-spacing:.4px}
+.dash-cal-nav{display:flex;gap:8px}
+.dash-cal-botones a{
+  display:inline-flex;align-items:center;
+  width:34px;height:34px;
+  border-radius:50%;
+  border:1px solid var(--cv-marco);
+  background:#fff;color:var(--cv-1);
+  text-decoration:none;
+}
+.dash-cal-botones a:hover{border-color:var(--cv-3);color:var(--cv-2)}
+.dash-cal-botones svg{width:16px;height:16px}
+.dash-cal-dias,.dash-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dash-cal-dias span{
+  text-align:center;
+  font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.4px;
+  color:var(--cv-sub);
+  padding:4px 0;
+}
+.dash-dia{
+  aspect-ratio:1/1;
+  border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  text-decoration:none;
+  color:var(--cv-tinta);
+  border:1px solid transparent;
+  transition:transform .1s,border-color .2s;
+}
+.dash-dia:hover{border-color:var(--cv-4);transform:translateY(-1px)}
+.dash-dia-num{font-size:13px;font-weight:700;line-height:1}
+.dash-dia-n{font-size:10.5px;font-weight:700;color:inherit;opacity:.85}
+.dash-dia.n0{background:#F2F8FA;color:#9DB2B8}
+.dash-dia.n1{background:#DCEFF1;color:var(--cv-1)}
+.dash-dia.n2{background:var(--cv-5);color:var(--cv-0)}
+.dash-dia.n3{background:linear-gradient(135deg,var(--cv-3),var(--cv-2));color:#fff}
+.dash-dia.hoy{box-shadow:inset 0 0 0 2px var(--cv-2)}
+.dash-dia.sel{border-color:var(--cv-2);box-shadow:0 0 0 3px rgba(29,139,148,.25)}
+.dash-cal-leyenda{display:flex;flex-wrap:wrap;gap:6px 12px;margin:12px 0 0;padding:0;list-style:none;color:var(--cv-sub);font-size:11.5px}
+.dash-cal-leyenda i{display:inline-block;width:11px;height:11px;border-radius:4px;margin-right:5px;vertical-align:-1px}
+.dash-cal-leyenda .l0{background:#F2F8FA;border:1px solid #E3EDF0}
+.dash-cal-leyenda .l1{background:#DCEFF1}
+.dash-cal-leyenda .l2{background:var(--cv-5)}
+.dash-cal-leyenda .l3{background:var(--cv-3)}
+
+.dash-cal-separador{border:none;border-top:1px dashed var(--cv-marco);margin:16px 0}
+.dash-cal-elegido-titulo{font-weight:700;color:var(--cv-0);margin:0 0 4px}
+.dash-cal-elegido-sub{margin:0 0 12px;font-size:12.5px;color:var(--cv-sub)}
+.dash-mini{margin:0;padding:0;list-style:none}
+.dash-mini li{
+  display:flex;align-items:center;gap:12px;
+  justify-content:space-between;
+  padding:9px 2px;
+  border-bottom:1px solid #F1F5F7;
+  font-size:13.5px;
+}
+.dash-mini li:last-child{border-bottom:none}
+.dash-mini .dash-hora{
+  flex:0 0 auto;
+  padding:4px 10px;
+  border-radius:999px;
+  background:var(--cv-6);
+  color:var(--cv-1);
+  font-size:12px;font-weight:700;
+}
+.dash-mini .dash-mini-datos{flex:1;min-width:0}
+.dash-mini strong{color:var(--cv-tinta)}
+.dash-mini .dash-sub{display:block;font-size:12px;color:var(--cv-sub)}
+.dash-mas{margin:10px 0 0;font-size:12.5px;color:var(--cv-sub)}
+
+/* Filas de citas de hoy */
+.dash-hoy-vacio{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:26px 12px;
+  border-radius:14px;
+  background:#F7FBFB;
+  border:1px dashed #CFE0E4;
+  color:var(--cv-sub);
+  text-align:center;
+  font-size:13.5px;
+}
+.dash-hoy-vacio svg{width:30px;height:30px;color:var(--cv-4)}
+.dash-fila{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:11px 2px;
+  border-bottom:1px solid #F1F5F7;
+}
+.dash-fila:last-child{border-bottom:none}
+.dash-nombre{font-weight:700;color:var(--cv-tinta);font-size:14px}
+.dash-detalles{font-size:12.5px;color:var(--cv-sub)}
+
+/* Timeline de actividad reciente */
+.dash-timeline{margin:0;padding:0;list-style:none}
+.dash-evento{
+  position:relative;
+  display:grid;
+  grid-template-columns:34px 1fr;
+  gap:12px;
+  padding:0 0 18px 0;
+}
+.dash-evento:last-child{padding-bottom:4px}
+.dash-evento::before{
+  content:"";
+  position:absolute;
+  left:16px;top:38px;bottom:0;
+  width:2px;border-radius:2px;
+  background:#E3EFF1;
+}
+.dash-evento:last-child::before{display:none}
+.dash-evento-icono{
+  width:34px;height:34px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;z-index:1;
+}
+.dash-evento-icono svg{width:16px;height:16px}
+.dash-evento-titulo{font-size:13.5px;font-weight:700;color:var(--cv-tinta);line-height:1.4}
+.dash-evento-titulo small{font-weight:600;color:var(--cv-sub)}
+.dash-evento-sub{font-size:12.5px;color:var(--cv-sub);line-height:1.5}
+.dash-ic-programada{background:var(--cv-info-fondo);color:var(--cv-info)}
+.dash-ic-confirmada{background:var(--cv-exito-fondo);color:var(--cv-exito)}
+.dash-ic-atendida{background:#E8F0F2;color:#385962}
+.dash-ic-cancelada{background:var(--cv-peligro-fondo);color:var(--cv-peligro)}
+.dash-ic-inasistencia{background:var(--cv-alerta-fondo);color:var(--cv-alerta)}
+
+/* Disponibilidad médica */
+.dash-med{
+  display:grid;
+  grid-template-columns:40px 1fr;
+  gap:12px;
+  padding:10px 2px;
+  border-bottom:1px solid #F1F5F7;
+}
+.dash-med:last-child{border-bottom:none}
+.dash-med-avatar{
+  width:40px;height:40px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--cv-4),var(--cv-2));
+  color:#fff;font-size:14px;font-weight:700;
+}
+.dash-med-nombre{font-weight:700;font-size:14px;color:var(--cv-tinta);overflow-wrap:anywhere}
+.dash-med-esp{font-size:12.5px;color:var(--cv-sub)}
+.dash-med-horario{font-size:12px;color:var(--cv-1);font-weight:600}
+.dash-med-estado{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-top:4px;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:12px;font-weight:700;
+  width:fit-content;
+}
+.dash-med-estado i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.dash-turno-libre{background:var(--cv-exito-fondo);color:var(--cv-exito)}
+.dash-turno-completo{background:#F1F5F9;color:#50676F}
+.dash-turno-sin-horario{background:#F4F6F8;color:#8AA0A6}
+.dash-med-estado-info{margin:12px 0 0;font-size:12px;color:var(--cv-sub)}
+
+/* Mensaje cuando los datos del panel no cargan */
+.dash-fallo{
+  background:var(--cv-alerta-fondo);
+  border:1px solid #F3DFAE;
+  color:var(--cv-alerta);
+  border-radius:16px;
+  padding:16px 20px;
+  margin-bottom:20px;
+  font-weight:600;
+}
+
+/* Responsive del dashboard */
+@media (max-width:1080px){
+  .dash-grid{grid-template-columns:1fr}
+  .dash-banner{min-height:230px}
+  .dash-banner-imagen{width:64%}
+  .dash-banner-texto{max-width:58%}
+}
+@media (max-width:640px){
+  .dash-banner{padding:22px;border-radius:20px;flex-direction:column;align-items:stretch;min-height:0}
+  .dash-banner h1{font-size:21px}
+  .dash-banner-texto{max-width:none}
+  .dash-banner-imagen{
+    position:relative;
+    width:100%;
+    height:130px;
+    margin-top:14px;
+    border-radius:16px;
+    -webkit-mask-image:none;
+    mask-image:none;
+    object-position:center 45%;
+  }
+  .dash-kpi{padding:16px}
+  .dash-kpi-num{font-size:28px}
+  .dash-panel{padding:18px;border-radius:16px}
+  .dash-cal-dias,.dash-cal-grid{gap:4px}
+  .dash-dia{border-radius:9px}
+  .dash-dia-num{font-size:12px}
+  .dash-fila{grid-template-columns:auto 1fr auto;gap:8px}
+}

@@ -17,6 +17,13 @@ function cvsu_texto(string $valor): string
 
 function cvsu_icono(string $clave): string
 {
+    // Las dos pantallas de RF08 comparten el icono de calendario con flechas.
+    $alias = array(
+        'seleccionar_reprogramacion' => 'reprogramar',
+        'reprogramar_cita' => 'reprogramar',
+    );
+    $clave = $alias[$clave] ?? $clave;
+
     $trazados = array(
         'inicio' => '<path d="M3.5 11 12 4l8.5 7M5.8 10v9.5h12.4V10"/>',
         'pacientes' => '<circle cx="9" cy="7.5" r="3.2"/><path d="M3 19.5c0-3.2 2.7-5.3 6-5.3s6 2.1 6 5.3"/><path d="M16 4.7A3 3 0 0 1 17 10.7M17.5 14.6c2 .8 3.5 2.3 3.5 4.9"/>',
@@ -24,6 +31,7 @@ function cvsu_icono(string $clave): string
         'especialidades' => '<rect x="4.5" y="3.5" width="15" height="17" rx="2.5"/><path d="M8.5 8h7M8.5 11.5h7M8.5 15h4.5"/>',
         'horarios' => '<circle cx="12" cy="12" r="8.3"/><path d="M12 7.3V12l3 2"/>',
         'citas' => '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8.5 2.8v4M15.5 2.8v4"/>',
+        'reprogramar' => '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8.5 2.8v4M15.5 2.8v4"/><path d="M7.5 14.2h5.4"/><path d="M11 12.4l2 1.8-2 1.8"/><path d="M14.9 16.8H18"/>',
         'cancelar' => '<circle cx="12" cy="12" r="8.3"/><path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6"/>',
         'asistencia' => '<circle cx="12" cy="12" r="8.3"/><path d="M8.5 12.2l2.3 2.3 4.7-4.9"/>',
         'historial' => '<path d="M20 12a8 8 0 1 1-2.7-6"/><path d="M20 4.5V9h-4.5M12 8v4.3l2.7 1.6"/>',
@@ -67,7 +75,7 @@ function cvsu_paginas(?array $usuario): array
             array('Especialidades', 'especialidades.php'),
             array('Horarios médicos', 'horarios.php'),
             array('Registrar citas', 'citas.php'),
-            array('Reprogramar citas', 'citas.php'),
+            array('Reprogramar citas', 'seleccionar_reprogramacion.php'),
             array('Cancelar citas', 'cancelar_cita.php'),
             array('Control de asistencia', 'asistencia_citas.php'),
             array('Historial de citas', 'historial_citas.php'),
@@ -78,7 +86,7 @@ function cvsu_paginas(?array $usuario): array
         return array_merge($inicio, array(
             array('Pacientes', 'pacientes.php'),
             array('Registrar citas', 'citas.php'),
-            array('Reprogramar citas', 'citas.php'),
+            array('Reprogramar citas', 'seleccionar_reprogramacion.php'),
             array('Cancelar citas', 'cancelar_cita.php'),
             array('Control de asistencia', 'asistencia_citas.php'),
             array('Historial de citas', 'historial_citas.php'),

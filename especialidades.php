@@ -211,20 +211,11 @@ try {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Especialidades | Clínica Vida Salud</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f2f7f8;color:#17333b;font-family:Arial,sans-serif}
-header{background:#146d73;color:#fff;padding:24px max(18px,calc((100vw - 1050px)/2))}header h1{margin:0;font-size:26px}header p{margin:8px 0 0}
-main{max-width:1050px;margin:26px auto;padding:0 16px}.panel{background:#fff;border-radius:14px;padding:24px;margin-bottom:22px;box-shadow:0 3px 18px #143b4215}
-h2{font-size:21px;margin:0 0 18px}label{display:block;font-weight:bold;font-size:14px;margin-bottom:6px}input,select,textarea{width:100%;padding:11px;border:1px solid #c7d6d9;border-radius:7px;font:inherit;background:#fff}textarea{min-height:100px;resize:vertical}.campo{margin-bottom:16px}
-button,.boton{display:inline-block;background:#146d73;color:#fff;border:0;border-radius:8px;padding:10px 15px;font-weight:bold;cursor:pointer;text-decoration:none;font-size:14px}.boton.secundario{background:#e7f0f1;color:#155960}.boton.rojizo{background:#a53c47}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #db9c22;outline-offset:3px}
-.acciones{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.acciones form{margin:0}.mensaje{border-radius:7px;background:#e1f6e9;padding:12px;margin:12px 0}.mensaje.error{background:#ffe7e7}
-.filtros{display:flex;flex-wrap:wrap;align-items:end;gap:12px}.filtros>div{flex:1;min-width:170px}.tabla{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:650px}th,td{padding:12px;text-align:left;border-bottom:1px solid #e4eeee;font-size:14px;vertical-align:top}th{background:#eaf4f4}.descripcion{white-space:pre-wrap;overflow-wrap:anywhere;max-width:360px}.nombre{overflow-wrap:anywhere;max-width:220px}.etiqueta{display:inline-block;font-size:12px;border-radius:7px;background:#eaf2f3;padding:5px 7px}.inactivo{background:#ffe8e8}.pequeno{font-size:13px;color:#49626a;line-height:1.5}.espacio{margin-top:18px}
-@media(max-width:700px){.panel{padding:16px}.filtros{display:block}.filtros>div{margin-bottom:12px}header h1{font-size:23px}.acciones{gap:6px}}
-</style>
+<link rel="stylesheet" href="assets/estilos.css">
 </head>
 <body>
-<header><h1>Clínica Vida Salud</h1><p>RF04 · Gestión de especialidades médicas</p><p>Entorno local de desarrollo · Acceso exclusivo para administrador</p></header>
-<main>
+<?php require_once __DIR__ . '/includes/ui.php'; cvsu_area('especialidades', 'Especialidades'); ?>
+<main class="ui-contenido">
 <p><a class="boton secundario" href="index.php">← Volver al inicio</a></p>
 <?php if ($aviso !== ''): ?><div class="mensaje" role="status"><?= e($aviso) ?></div><?php endif; ?>
 <?php foreach ($errores as $error): ?><div class="mensaje error" role="alert"><?= e($error) ?></div><?php endforeach; ?>
@@ -266,5 +257,6 @@ button,.boton{display:inline-block;background:#146d73;color:#fff;border:0;border
 </tbody></table></div>
 </section>
 </main>
+<?php cvsu_cierre(); ?>
 </body>
 </html>

@@ -228,28 +228,11 @@ $csrf = cvs_csrf_token();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cancelación de citas | Clínica Vida Salud</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#f2f7f8;color:#17333b;font-family:Arial,sans-serif}header{background:#146d73;color:#fff;padding:24px max(18px,calc((100vw - 1180px)/2))}header h1{margin:0;font-size:26px}header p{margin:8px 0 0;line-height:1.5}main{max-width:1180px;margin:26px auto;padding:0 16px}.panel{background:#fff;border-radius:14px;padding:24px;margin-bottom:22px;box-shadow:0 3px 18px #143b4215}h2{font-size:21px;margin:0 0 18px}p{line-height:1.6}label{display:block;font-weight:bold;font-size:14px;margin-bottom:6px}input,select,textarea{width:100%;padding:11px;border:1px solid #c7d6d9;border-radius:7px;font:inherit;background:#fff}textarea{min-height:100px;resize:vertical}.campo{margin:18px 0}.confirmacion{display:flex;align-items:flex-start;gap:10px;line-height:1.6}.confirmacion input{width:auto;margin-top:6px;flex-shrink:0}button,.boton{display:inline-block;background:#146d73;color:#fff;border:0;border-radius:8px;padding:10px 15px;font-weight:bold;cursor:pointer;text-decoration:none;font-size:14px}.boton.secundario{background:#e7f0f1;color:#155960}.boton.rojizo{background:#a53c47}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #db9c22;outline-offset:3px}.acciones{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.mensaje{border-radius:7px;background:#e1f6e9;padding:12px;margin:12px 0;line-height:1.6}.mensaje.error{background:#ffe7e7}.mensaje.advertencia{background:#fff3d8}.filtros{display:flex;flex-wrap:wrap;align-items:end;gap:12px}.filtros>div{flex:1;min-width:170px}.tabla{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:1000px}th,td{padding:12px;text-align:left;border-bottom:1px solid #e4eeee;font-size:14px;vertical-align:top;overflow-wrap:anywhere}th{background:#eaf4f4}.etiqueta{display:inline-block;font-size:12px;border-radius:7px;background:#eaf2f3;padding:6px 8px}.cancelada{background:#ffe8e8}.disponible{color:#146d73;font-weight:bold}.pequeno{font-size:13px;color:#49626a;line-height:1.6}.detalle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.detalle div{padding:12px;background:#f2f7f8;border-radius:7px;overflow-wrap:anywhere}.detalle dt{font-size:13px;font-weight:bold;margin-bottom:5px}.detalle dd{margin:0;line-height:1.5}.paginacion{margin-top:20px}@media(max-width:700px){.panel{padding:16px}.filtros{display:block}.filtros>div{margin-bottom:12px}.detalle{grid-template-columns:1fr}header h1{font-size:23px}.acciones{gap:8px}}
-/* Anchos y saltos de línea específicos del listado de citas. */
-.tabla{max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain}
-.tabla table{min-width:1360px;table-layout:auto}
-.tabla th,.tabla td{line-height:1.5;overflow-wrap:normal;word-break:normal}
-.tabla th{white-space:nowrap}
-.tabla th:nth-child(1),.tabla td:nth-child(1):not([colspan]){min-width:160px;white-space:nowrap}
-.tabla th:nth-child(2),.tabla th:nth-child(3),.tabla td:nth-child(2),.tabla td:nth-child(3){min-width:190px}
-.tabla th:nth-child(4),.tabla td:nth-child(4){min-width:180px}
-.tabla td:nth-child(2),.tabla td:nth-child(3),.tabla td:nth-child(4){white-space:normal;overflow-wrap:break-word}
-.tabla th:nth-child(5),.tabla td:nth-child(5){min-width:124px;white-space:nowrap}
-.tabla th:nth-child(6),.tabla td:nth-child(6){min-width:112px;white-space:nowrap}
-.tabla th:nth-child(7),.tabla td:nth-child(7){min-width:128px;white-space:nowrap}
-.tabla th:nth-child(8),.tabla td:nth-child(8){min-width:240px}
-.tabla .etiqueta,.tabla .boton{white-space:nowrap}
-.tabla .disponible{margin:0 0 10px}
-</style>
+<link rel="stylesheet" href="assets/estilos.css">
 </head>
 <body>
-<header><h1>Clínica Vida Salud</h1><p>RF09 · Cancelación de citas médicas</p><p>Acceso exclusivo para administrador y recepcionista</p></header>
-<main>
+<?php require_once __DIR__ . '/includes/ui.php'; cvsu_area('cancelar', 'Cancelar citas'); ?>
+<main class="ui-contenido">
 <p><a class="boton secundario" href="index.php">← Volver al inicio</a></p>
 <?php if (is_array($flash) && is_string($flash['mensaje'] ?? null)): ?>
 <div class="mensaje <?= cvs_escapar(in_array($flash['tipo'] ?? '', ['error', 'advertencia'], true) ? $flash['tipo'] : '') ?>" role="status"><?= cvs_escapar($flash['mensaje']) ?></div>
@@ -310,5 +293,6 @@ $csrf = cvs_csrf_token();
 <?php endif; ?>
 </section>
 </main>
+<?php cvsu_cierre(); ?>
 </body>
 </html>

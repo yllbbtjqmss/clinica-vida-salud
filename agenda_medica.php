@@ -94,57 +94,11 @@ if ($idMedicoSel && $fSel) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Agenda médica - Clínica Vida Salud</title>
-    <style>
-        *{box-sizing:border-box}body{margin:0;background:#f3f7f8;color:#19333c;font-family:Arial,sans-serif}
-        header{background:#146d73;color:white;padding:22px max(20px,calc((100vw - 1100px)/2))}
-        header h1{margin:0;font-size:25px}header p{margin:7px 0 0}
-        nav{margin-top:12px}nav a{color:#e6fffd;text-decoration:none;margin-right:14px;font-weight:600}
-        nav a:hover{text-decoration:underline}
-        main{max-width:1200px;margin:28px auto;padding:0 16px}
-        .panel{background:white;border-radius:13px;padding:25px;margin-bottom:24px;box-shadow:0 3px 20px #0a30301a}
-        h2{margin-top:0;font-size:21px}
-        .campos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:end}
-        label{display:block;font-weight:600;font-size:14px;margin-bottom:7px}
-        input,select{width:100%;border:1px solid #cbd6d9;border-radius:7px;padding:11px;font-size:15px;background:white;font-family:Arial,sans-serif}
-        .acciones{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px;align-items:center}
-        button, .btn{background:#146d73;color:white;border:0;border-radius:8px;padding:12px 22px;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block}
-        .mensaje{border-radius:7px;padding:12px 15px;margin-bottom:15px;background:#e2f7e9}
-        .error{background:#fce6e6}
-        .resumen{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-        .pill{padding:8px 12px;border-radius:999px;background:#edf5f5;border:1px solid #c9d9dc;font-size:13px;font-weight:600}
-        .tabla{overflow-x:auto}
-        table{border-collapse:collapse;width:100%;min-width:950px}
-        td,th{text-align:left;border-bottom:1px solid #e5ebee;padding:12px;font-size:14px;vertical-align:top}
-        th{background:#edf5f5}
-        .estado{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:0.3px}
-        .est-programada{background:#e6f4ff;color:#0b4f8a}
-        .est-confirmada{background:#e8f7ef;color:#1f7a43}
-        .est-atendida{background:#f1f5f9;color:#334155}
-        .est-cancelada{background:#fdecec;color:#a61e1e}
-        .est-inasistencia{background:#fff3cd;color:#7a5c00}
-        .timeline{display:grid;grid-template-columns:90px 1fr;gap:10px}
-        .hora-col{color:#6b7f85;font-weight:600}
-        .cita-item{border:1px solid #e1ecec;border-radius:10px;padding:12px 14px;background:#fbfefe;margin-bottom:10px;box-shadow:0 1px 6px #0a303005}
-        .cita-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-        .cita-title{font-weight:700}
-        .cita-meta{display:flex;flex-wrap:wrap;gap:12px;color:#35595c;font-size:13px;margin-top:6px}
-        @media(max-width:700px){.campos{grid-template-columns:1fr}.panel{padding:17px}}
-    </style>
+    <link rel="stylesheet" href="assets/estilos.css">
 </head>
 <body>
-<header>
-    <h1>Clínica Vida Salud</h1>
-    <p>Agenda médica - Versión local de desarrollo</p>
-    <nav>
-        <a href="index.php">Inicio</a>
-        <a href="pacientes.php">Pacientes</a>
-        <a href="medicos.php">Médicos</a>
-        <a href="horarios.php">Horarios</a>
-        <a href="citas.php">Citas</a>
-        <a href="agenda_medica.php">Agenda</a>
-    </nav>
-</header>
-<main>
+<?php require_once __DIR__ . '/includes/ui.php'; cvsu_area('agenda', 'Agenda médica'); ?>
+<main class="ui-contenido">
     <section class="panel">
         <h2>Consulta de agenda por médico</h2>
         <?php if ($aviso): ?><div class="mensaje"><?= e($aviso) ?></div><?php endif; ?>
@@ -270,5 +224,6 @@ if ($idMedicoSel && $fSel) {
         <?php endif; ?>
     </section>
 </main>
+<?php cvsu_cierre(); ?>
 </body>
 </html>

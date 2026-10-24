@@ -78,15 +78,26 @@ unset($_SESSION['cvs_login_aviso']);
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Iniciar sesión | Clínica Vida Salud</title>
-<style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#f2f7f8;color:#17333b;font-family:Arial,sans-serif}main{max-width:1040px;margin:0 auto;padding:60px 22px;display:grid;grid-template-columns:1fr 1fr;gap:45px;align-items:center;min-height:100vh}.marca{display:inline-block;color:#146d73;background:#dfedef;padding:9px 13px;border-radius:25px;font-weight:bold;font-size:14px}h1{font-size:42px;line-height:1.15;margin:23px 0 18px}.presentacion p{color:#49646c;line-height:1.8;max-width:430px}.tarjeta{background:#fff;padding:34px;border-radius:18px;box-shadow:0 10px 35px #143b4212;border:1px solid #e1eeee}h2{margin:0 0 10px;font-size:25px}.ayuda{font-size:14px;color:#49646c;line-height:1.6}.campo{margin-top:22px}label{display:block;font-size:14px;font-weight:bold;margin-bottom:8px}input{width:100%;border:1px solid #c7d6d9;border-radius:8px;padding:13px;font:inherit}button{width:100%;border:0;border-radius:8px;background:#146d73;color:#fff;padding:14px;font:inherit;font-weight:bold;cursor:pointer;margin-top:25px}a{color:#146d73}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid #db9c22;outline-offset:3px}.error{background:#ffe7e7;border-radius:8px;padding:13px;font-size:14px;line-height:1.5}.nota{border-top:1px solid #e1eeee;margin-top:24px;padding-top:16px;font-size:12px;color:#587079;line-height:1.6}@media(max-width:720px){main{display:block;padding:28px 18px}.presentacion{margin-bottom:28px}h1{font-size:31px}.tarjeta{padding:24px}.presentacion p{margin-bottom:0}}
-</style>
+<link rel="stylesheet" href="assets/estilos.css">
 </head>
-<body>
-<main>
-<section class="presentacion"><span class="marca">Clínica Vida Salud</span><h1>Bienvenido a tu espacio de salud.</h1><p>Accede con tu cuenta para identificarte en el sistema de gestión de citas médicas.</p><p><a href="index.php">← Volver al inicio</a></p></section>
-<section class="tarjeta" aria-labelledby="titulo-login">
-<h2 id="titulo-login">Iniciar sesión</h2><p class="ayuda">Introduce los datos de tu cuenta. Todos los campos son obligatorios.</p>
+<body class="ui-pagina-login">
+<main class="ui-login">
+<section class="ui-login-marca">
+<div class="cvs-marca">
+<span class="cvs-logo"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span>
+<span class="cvs-marca-texto">
+<span class="cvs-nombre">Clínica Vida Salud</span>
+<span class="cvs-lema">Cuidamos tu vida, siempre</span>
+</span>
+</div>
+<h1>Bienvenido a tu espacio de salud.</h1>
+<p>Accede con tu cuenta para identificarte en el sistema de gestión de citas médicas.</p>
+<span class="acciones"><a class="boton secundario" href="index.php">← Volver al inicio</a></span>
+<p class="ui-login-frase">«Una comunidad más saludable — atención humana, tecnología que cuida.»</p>
+</section>
+<section class="ui-login-tarjeta">
+<div class="tarjeta" aria-labelledby="titulo-login">
+<h2 class="ui-login-titulo" id="titulo-login">Iniciar sesión</h2><p class="ayuda">Introduce los datos de tu cuenta. Todos los campos son obligatorios.</p>
 <?php if ($aviso['error'] !== ''): ?><div class="error" role="alert"><?= cvs_escapar($aviso['error']) ?></div><?php endif; ?>
 <form method="post" action="login.php">
 <input type="hidden" name="csrf" value="<?= cvs_escapar(cvs_csrf_token()) ?>">
@@ -95,6 +106,7 @@ unset($_SESSION['cvs_login_aviso']);
 <button type="submit">Iniciar sesión</button>
 </form>
 <p class="nota">Entorno local de desarrollo · RF01.<br>Gestión de pacientes: administrador y recepcionista. Gestión de especialidades: únicamente administrador. Médico y paciente tendrán pantallas específicas posteriormente.</p>
+</div>
 </section>
 </main>
 </body>

@@ -216,45 +216,11 @@ $ultima = $citas ? $primera + count($citas) - 1 : 0;
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Historial de citas | Clínica Vida Salud</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#f2f7f8;color:#17333b;font-family:Arial,sans-serif}
-header{background:#146d73;color:#fff;padding:24px max(18px,calc((100vw - 1180px)/2))}
-header h1{margin:0;font-size:26px}header p{margin:8px 0 0;line-height:1.5}
-main{max-width:1180px;margin:26px auto;padding:0 16px}
-.panel{min-width:0;background:#fff;border-radius:14px;padding:24px;margin-bottom:22px;box-shadow:0 3px 18px #143b4215}
-h2{font-size:21px;margin:0 0 18px}p{line-height:1.6}
-label{display:block;font-weight:bold;font-size:14px;margin-bottom:6px}
-input,select{width:100%;min-width:0;padding:11px;border:1px solid #c7d6d9;border-radius:7px;font:inherit;background:#fff}
-button,.boton{display:inline-block;background:#146d73;color:#fff;border:0;border-radius:8px;padding:10px 15px;font-weight:bold;cursor:pointer;text-decoration:none;font-size:14px}
-.boton.secundario{background:#e7f0f1;color:#155960}
-a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,.tabla:focus-visible{outline:3px solid #db9c22;outline-offset:3px}
-.acciones{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:20px}
-.mensaje{border-radius:7px;padding:12px;margin:12px 0;background:#e7f0f1;line-height:1.6}
-.mensaje.error{background:#ffe7e7}.mensaje.aviso{background:#fff3d8}
-.filtros{display:flex;flex-wrap:wrap;align-items:end;gap:12px}.filtros>div{flex:1;min-width:170px}
-.pequeno{font-size:13px;color:#49626a;line-height:1.6}
-.tabla{max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain}
-table{width:100%;border-collapse:collapse}
-th,td{padding:12px;text-align:left;border-bottom:1px solid #e4eeee;font-size:14px;line-height:1.5;vertical-align:top;word-break:normal}
-th{background:#eaf4f4;white-space:nowrap}
-.pacientes{min-width:660px}.pacientes td:first-child{min-width:220px;overflow-wrap:break-word}
-.pacientes td:nth-child(2){min-width:160px;white-space:nowrap}.pacientes .boton{white-space:nowrap}
-.citas{min-width:1080px;table-layout:auto}
-.citas th:nth-child(1),.citas td:nth-child(1):not([colspan]){min-width:160px;white-space:nowrap}
-.citas th:nth-child(2),.citas td:nth-child(2){min-width:124px;white-space:nowrap}
-.citas th:nth-child(3),.citas td:nth-child(3),.citas th:nth-child(4),.citas td:nth-child(4){min-width:112px;white-space:nowrap}
-.citas th:nth-child(5),.citas td:nth-child(5){min-width:210px;overflow-wrap:break-word}
-.citas th:nth-child(6),.citas td:nth-child(6){min-width:190px;overflow-wrap:break-word}
-.citas th:nth-child(7),.citas td:nth-child(7){min-width:128px;white-space:nowrap}
-.etiqueta{display:inline-block;font-size:12px;border-radius:7px;background:#eaf2f3;padding:6px 8px;white-space:nowrap}
-.inactivo,.cancelada{background:#ffe8e8}.paciente{overflow-wrap:anywhere}.paginacion{margin-top:20px;margin-bottom:0}
-@media(max-width:700px){.panel{padding:16px}.filtros{display:block}.filtros>div{margin-bottom:12px}header h1{font-size:23px}.acciones{gap:8px}}
-</style>
+<link rel="stylesheet" href="assets/estilos.css">
 </head>
 <body>
-<header><h1>Clínica Vida Salud</h1><p>RF12 · Historial de citas médicas</p><p>Consulta administrativa · Administrador y recepcionista</p></header>
-<main>
+<?php require_once __DIR__ . '/includes/ui.php'; cvsu_area('historial', 'Historial de citas'); ?>
+<main class="ui-contenido">
 <nav class="acciones" aria-label="Navegación del módulo"><a class="boton secundario" href="pacientes.php">← Volver a pacientes</a><a class="boton secundario" href="index.php">Ir al inicio</a></nav>
 <?php foreach ($errores as $error): ?><div class="mensaje error" role="alert"><?= cvs_escapar($error) ?></div><?php endforeach; ?>
 <?php foreach ($avisos as $aviso): ?><div class="mensaje aviso" role="status"><?= cvs_escapar($aviso) ?></div><?php endforeach; ?>
@@ -309,5 +275,6 @@ th{background:#eaf4f4;white-space:nowrap}
 </section>
 <?php elseif (!array_key_exists('id_paciente', $_GET)): ?><p class="mensaje" role="status">Busca y selecciona un paciente para consultar su historial.</p><?php endif; ?>
 </main>
+<?php cvsu_cierre(); ?>
 </body>
 </html>

@@ -328,48 +328,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reprogramar cita - Clínica Vida Salud</title>
-    <style>
-        *{box-sizing:border-box}body{margin:0;background:#f3f7f8;color:#19333c;font-family:Arial,sans-serif}
-        header{background:#146d73;color:white;padding:22px max(20px,calc((100vw - 1100px)/2))}
-        header h1{margin:0;font-size:25px}header p{margin:7px 0 0}
-        nav{margin-top:12px}nav a{color:#e6fffd;text-decoration:none;margin-right:14px;font-weight:600}
-        nav a:hover{text-decoration:underline}
-        main{max-width:1100px;margin:28px auto;padding:0 16px}
-        .panel{background:white;border-radius:13px;padding:25px;margin-bottom:24px;box-shadow:0 3px 20px #0a30301a}
-        h2{margin-top:0;font-size:21px}
-        .campos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-        label{display:block;font-weight:600;font-size:14px;margin-bottom:7px}
-        input,select,textarea{width:100%;border:1px solid #cbd6d9;border-radius:7px;padding:11px;font-size:15px;background:white;font-family:Arial,sans-serif}
-        textarea{resize:vertical;min-height:80px}
-        .acciones{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px;align-items:center}
-        button, .btn{background:#146d73;color:white;border:0;border-radius:8px;padding:12px 22px;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block}
-        .mensaje{border-radius:7px;padding:12px 15px;margin-bottom:15px;background:#e2f7e9}
-        .error{background:#fce6e6}
-        .bloques{display:flex;flex-wrap:wrap;gap:10px}
-        .bloque{border:1px solid #7f9a9d;border-radius:7px;padding:10px 16px;cursor:pointer;background:#ffffff;color:#19333c;font-weight:600;font-family:Arial,sans-serif;font-size:15px;line-height:1.2;transition:background 0.2s ease,color 0.2s ease,border-color 0.2s ease,box-shadow 0.2s ease}
-        .bloque:hover{background:#edf5f5;border-color:#146d73}
-        .bloque:focus-visible{outline:2px solid #146d73;outline-offset:2px}
-        .bloque.sel{background:#146d73;border-color:#146d73;color:#ffffff;box-shadow:0 2px 8px rgba(20,109,115,0.25)}
-        .info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-        .info-item{background:#f7fbfb;border:1px solid #e1ecec;border-radius:8px;padding:10px 14px}
-        .info-item .label{font-weight:600;font-size:13px;color:#35595c}
-        .info-item .value{font-size:15px;margin-top:4px}
-        @media(max-width:700px){.campos{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr}.panel{padding:17px}}
-    </style>
+    <link rel="stylesheet" href="assets/estilos.css">
 </head>
 <body>
-<header>
-    <h1>Clínica Vida Salud</h1>
-    <p>Reprogramación de citas médicas - Versión local de desarrollo</p>
-    <nav>
-        <a href="index.php">Inicio</a>
-        <a href="pacientes.php">Pacientes</a>
-        <a href="medicos.php">Médicos</a>
-        <a href="horarios.php">Horarios</a>
-        <a href="citas.php">Citas</a>
-    </nav>
-</header>
-<main>
+<?php require_once __DIR__ . '/includes/ui.php'; cvsu_area('citas', 'Reprogramar citas'); ?>
+<main class="ui-contenido">
     <section class="panel">
         <h2>Reprogramar cita</h2>
         <div style="margin-bottom:16px"><a class="btn" href="citas.php" style="padding:8px 14px;font-size:13px">← Volver a Citas</a></div>
@@ -494,5 +457,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 })();
 </script>
+<?php cvsu_cierre(); ?>
 </body>
 </html>

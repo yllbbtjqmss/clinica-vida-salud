@@ -243,48 +243,11 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Horarios | Clínica Vida Salud</title>
-    <style>
-        *{box-sizing:border-box}body{margin:0;background:#f3f7f8;color:#19333c;font-family:Arial,sans-serif}
-        header{background:#146d73;color:white;padding:22px max(20px,calc((100vw - 1100px)/2))}
-        header h1{margin:0;font-size:25px}header p{margin:7px 0 0}
-        nav{margin-top:12px}nav a{color:#e6fffd;text-decoration:none;margin-right:14px;font-weight:600}
-        nav a:hover{text-decoration:underline}
-        main{max-width:1100px;margin:28px auto;padding:0 16px}
-        .panel{background:white;border-radius:13px;padding:25px;margin-bottom:24px;box-shadow:0 3px 20px #0a30301a}
-        h2{margin-top:0;font-size:21px}
-        .campos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-        label{display:block;font-weight:600;font-size:14px;margin-bottom:7px}
-        input,select{width:100%;border:1px solid #cbd6d9;border-radius:7px;padding:11px;font-size:15px;background:white}
-        .acciones{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px;align-items:center}
-        button, .btn{background:#146d73;color:white;border:0;border-radius:8px;padding:12px 22px;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block}
-        .btn-sec{background:#4a6f73}
-        .mensaje{border-radius:7px;padding:12px 15px;margin-bottom:15px;background:#e2f7e9}
-        .error{background:#fce6e6}
-        .filtros{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
-        .filtros > div{min-width:220px}
-        .tabla{overflow-x:auto}
-        table{border-collapse:collapse;width:100%;min-width:900px}
-        td,th{text-align:left;border-bottom:1px solid #e5ebee;padding:12px;font-size:14px;vertical-align:top}
-        th{background:#edf5f5}
-        .estado-activo{color:#1f7c3f;font-weight:600}
-        .estado-inactivo{color:#9b2c2c;font-weight:600}
-        .mini{padding:8px 14px;font-size:13px}
-        #horarios-listado{scroll-margin-top: 20px;}
-        @media(max-width:700px){.campos{grid-template-columns:1fr}.panel{padding:17px}}
-    </style>
+    <link rel="stylesheet" href="assets/estilos.css">
 </head>
 <body>
-<header>
-    <h1>Clínica Vida Salud</h1>
-    <p>Gestión de horarios de atención · Versión local de desarrollo</p>
-    <nav>
-        <a href="index.php">Inicio</a>
-        <a href="pacientes.php">Pacientes</a>
-        <a href="medicos.php">Médicos</a>
-        <a href="horarios.php">Horarios</a>
-    </nav>
-</header>
-<main>
+<?php require_once __DIR__ . '/includes/ui.php'; cvsu_area('horarios', 'Horarios médicos'); ?>
+<main class="ui-contenido">
     <section class="panel">
         <h2><?= $datos['id_horario'] === '' ? 'Registrar nuevo horario' : 'Editar horario' ?></h2>
         <?php if ($aviso): ?><div class="mensaje"><?= e($aviso) ?></div><?php endif; ?>
@@ -454,5 +417,6 @@ try {
     });
 })();
 </script>
+<?php cvsu_cierre(); ?>
 </body>
 </html>

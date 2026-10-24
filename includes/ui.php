@@ -36,6 +36,7 @@ function cvsu_icono(string $clave): string
         'asistencia' => '<circle cx="12" cy="12" r="8.3"/><path d="M8.5 12.2l2.3 2.3 4.7-4.9"/>',
         'historial' => '<path d="M20 12a8 8 0 1 1-2.7-6"/><path d="M20 4.5V9h-4.5M12 8v4.3l2.7 1.6"/>',
         'agenda' => '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8.5 2.8v4M15.5 2.8v4"/><path d="M7.5 13h2M11 13h2M14.5 13h2M7.5 16.5h2M11 16.5h2"/>',
+        'reportes' => '<path d="M4 20.2h16"/><path d="M7.2 20.2v-6.1"/><path d="M12 20.2V6.8"/><path d="M16.8 20.2v-9.4"/>',
         'salir' => '<path d="M9.5 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3.5"/><path d="M14.8 16.2 19.2 12l-4.4-4.2M19.2 12H9.5"/>',
         'entrar' => '<path d="M13.5 20H17a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.5"/><path d="M9.2 16.2 4.8 12l4.4-4.2M4.8 12h9.7"/>',
         'corazon' => '<path d="M12 20.8s-7.4-4.6-9-8.9c-1-2.6.5-5.4 3.1-6.1 2-.5 4.2.5 5.9 2.7 1.7-2.2 3.9-3.2 5.9-2.7 2.6.7 4.1 3.5 3.1 6.1-1.6 4.3-9 8.9-9 8.9z"/>',
@@ -80,6 +81,7 @@ function cvsu_paginas(?array $usuario): array
             array('Control de asistencia', 'asistencia_citas.php'),
             array('Historial de citas', 'historial_citas.php'),
             array('Agenda médica', 'agenda_medica.php'),
+            array('Reportes', 'reportes.php'),
         ));
     }
     if ($rol === 'recepcionista') {

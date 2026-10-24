@@ -125,6 +125,16 @@ if ($esPanel) {
 <a class="dash-kpi-link" href="agenda_medica.php?fecha=<?= $hoy->format('Y-m-d') ?>">Ver agenda médica →</a>
 </div>
 </div>
+<?php if ($usuario['rol'] === 'administrador'): ?>
+<div class="dash-kpi dash-kpi-sin-num">
+<span class="dash-kpi-icono" aria-hidden="true"><?= cvsu_icono('reportes') ?></span>
+<div>
+<p class="dash-kpi-titulo">Reportes administrativos</p>
+<p class="dash-kpi-sub">Estadísticas y seguimiento de citas</p>
+<a class="dash-kpi-link" href="reportes.php">Abrir reportes →</a>
+</div>
+</div>
+<?php endif; ?>
 </section>
 
 <div class="dash-grid">

@@ -889,6 +889,140 @@ button.btn-sec:hover,.boton.btn-sec:hover{filter:none;background:#CEDEE3}
   font-weight:600;
 }
 
+/* =========================================================
+   RF13 — REPORTES ADMINISTRATIVOS
+   ========================================================= */
+.rep-intro{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:16px;margin-bottom:18px;
+}
+.rep-intro h1{margin:0 0 6px;font-size:26px;color:var(--cv-0)}
+.rep-descripcion{margin:0;color:var(--cv-sub);font-size:14.5px;max-width:70ch}
+
+.rep-tabs{
+  display:flex;flex-wrap:wrap;gap:10px;
+  margin-bottom:18px;
+}
+.rep-tab{
+  display:inline-flex;align-items:center;
+  padding:9px 18px;
+  border-radius:999px;
+  background:var(--cv-blanco);
+  border:1px solid var(--cv-marco);
+  color:var(--cv-tinta);
+  font-size:13.5px;font-weight:600;
+  text-decoration:none;
+  transition:background .15s ease,border-color .15s ease,color .15s ease;
+}
+.rep-tab:hover{border-color:var(--cv-3);color:var(--cv-1)}
+.rep-tab.activo{
+  background:linear-gradient(120deg,#0A3D4A,#10606F);
+  border-color:transparent;
+  color:#fff;
+}
+
+.rep-meta{
+  display:flex;flex-wrap:wrap;gap:6px 24px;
+  background:var(--cv-blanco);
+  border:1px solid var(--cv-marco);
+  border-radius:14px;
+  padding:12px 18px;
+  margin-bottom:18px;
+  font-size:12.5px;color:var(--cv-sub);
+}
+.rep-meta span{overflow-wrap:anywhere}
+
+.dash-kpi .dash-sub{display:block;margin-top:2px;font-size:12px;color:var(--cv-sub)}
+.dash-kpi .dash-kpi-sub{margin:0 0 6px;font-size:12.5px;color:var(--cv-sub)}
+.dash-kpi.dash-kpi-sin-num .dash-kpi-num{display:none}
+
+/* --- Gráfico de barras verticales por estado --- */
+.rep-barras{
+  display:flex;align-items:flex-end;gap:14px;
+  height:190px;
+  padding:10px 6px 4px;
+  border-bottom:2px solid #E4EEF1;
+  margin:14px 0 10px;
+}
+.rep-barra{
+  flex:1 1 0;min-width:60px;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;
+  height:100%;
+}
+.rep-barra-valor{font-size:12px;font-weight:700;color:var(--cv-0);white-space:nowrap}
+.rep-barra-altura{
+  width:100%;max-width:52px;
+  border-radius:9px 9px 0 0;
+  background:linear-gradient(180deg,#1D8B94,#0A3D4A);
+  min-height:4px;
+}
+.rep-barra-etiqueta{font-size:11.5px;font-weight:600;color:var(--cv-sub);text-align:center}
+
+/* --- Barras horizontales (especialidad / actividad por médico) --- */
+.rep-horizontal{
+  display:grid;gap:10px;
+  margin:14px 0 18px;
+}
+.rep-h-fila{
+  display:grid;
+  grid-template-columns:minmax(110px,190px) 1fr auto;
+  gap:12px;align-items:center;
+}
+.rep-h-nombre{font-size:13.5px;font-weight:600;color:var(--cv-tinta);overflow-wrap:anywhere}
+.rep-h-track{
+  height:14px;border-radius:999px;
+  background:#EAF3F5;overflow:hidden;
+  display:block;
+}
+.rep-h-bar{
+  height:100%;border-radius:999px;
+  background:linear-gradient(90deg,#0A3D4A,#1D8B94,#4FB8B4);
+  display:block;min-width:6px;
+}
+.rep-h-num{font-size:12.5px;font-weight:700;color:var(--cv-1);white-space:nowrap}
+
+/* --- Actividad por fecha (mini-barras con desplazamiento) --- */
+.rep-actividad{
+  display:flex;align-items:flex-end;gap:5px;
+  height:150px;
+  padding:10px 4px 4px;
+  border-bottom:2px solid #E4EEF1;
+  margin:14px 0 6px;
+  overflow-x:auto;
+}
+.rep-ctd{
+  flex:0 0 16px;
+  display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;
+  height:100%;
+}
+.rep-ctd-altura{
+  width:100%;
+  border-radius:4px 4px 0 0;
+  background:linear-gradient(180deg,#4FB8B4,#10606F);
+  min-height:3px;
+}
+.rep-ctd-etiqueta{font-size:9.5px;color:var(--cv-sub);font-weight:600}
+.rep-detalle{margin:8px 0 4px}
+.rep-detalle summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--cv-1)}
+.rep-detalle p{margin:8px 0 0}
+
+/* --- Impresión: título, filtros y datos; se ocultan sidebar y controles --- */
+@media print{
+  body{background:#fff;color:#111}
+  .ui-app{padding-left:0}
+  .cvs-marco,.cvs-topbar,.cvs-velo,.cvs-menu,.cvs-hamburguesa,
+  .rep-tabs,.filtros,.busqueda,.acciones,.paginacion,button{display:none !important}
+  .ui-contenido{padding:0;max-width:none;margin:0}
+  .dash-panel,.tabla,.dash-kpi,.confirmacion{
+    box-shadow:none;border:1px solid #D7E2E6;break-inside:avoid;
+  }
+  .rep-intro h1{font-size:20px}
+  .rep-meta{border:1px solid #D7E2E6}
+  .tabla{overflow:visible}
+  .tabla table{min-width:0}
+  .dash-kpis{gap:8px}
+}
+
 /* Responsive del dashboard */
 @media (max-width:1080px){
   .dash-grid{grid-template-columns:1fr}
@@ -917,4 +1051,29 @@ button.btn-sec:hover,.boton.btn-sec:hover{filter:none;background:#CEDEE3}
   .dash-dia{border-radius:9px}
   .dash-dia-num{font-size:12px}
   .dash-fila{grid-template-columns:auto 1fr auto;gap:8px}
+}
+
+/* Responsive RF13 — Reportes */
+@media (max-width:1080px){
+  .rep-barras{height:170px}
+  .rep-h-fila{grid-template-columns:minmax(90px,160px) 1fr auto}
+}
+@media (max-width:768px){
+  .rep-intro{flex-direction:column;gap:8px}
+  .rep-h-fila{grid-template-columns:minmax(80px,140px) 1fr auto;gap:10px}
+  .rep-actividad{height:130px}
+}
+@media (max-width:640px){
+  .rep-intro h1{font-size:21px}
+  .rep-tabs{gap:8px}
+  .rep-tab{padding:8px 14px;font-size:12.5px}
+  .rep-barras{gap:8px;height:210px;padding-top:6px}
+  .rep-barra{min-width:44px;gap:6px}
+  .rep-barra-valor{font-size:10.5px}
+  .rep-barra-etiqueta{font-size:10px}
+  .rep-h-fila{grid-template-columns:1fr auto;grid-template-rows:auto auto}
+  .rep-h-nombre{grid-column:1}
+  .rep-h-num{grid-column:2;grid-row:1}
+  .rep-h-track{grid-column:1/-1;grid-row:2}
+  .rep-ctd{flex:0 0 12px}
 }

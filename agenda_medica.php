@@ -27,11 +27,13 @@ try {
 }
 
 $idMedicoSel = filter_var($_GET['id_medico'] ?? '', FILTER_VALIDATE_INT);
-$fechaSel = trim($_GET['fecha'] ?? date('Y-m-d'));
-$fSel = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaSel);
-if (!$fSel) {
-    $fechaSel = date('Y-m-d');
-    $fSel = new DateTimeImmutable($fechaSel);
+$fechaSel = array_key_exists('fecha', $_GET) ? cvs_texto($_GET, 'fecha') : (new DateTimeImmutable('today', new DateTimeZone('America/La_Paz')))->format('Y-m-d');
+$fSel = preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/', $fechaSel)
+    ? DateTimeImmutable::createFromFormat('!Y-m-d', $fechaSel) : false;
+if (!$fSel || $fSel->format('Y-m-d') !== $fechaSel || !preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/', $fechaSel)) {
+    $errores[] = 'La fecha no existe o no tiene formato AAAA-MM-DD.';
+    $fSel = false;
+    http_response_code(400);
 }
 
 // Validar médico seleccionado
@@ -44,10 +46,15 @@ if ($idMedicoSel) {
         }
     }
 }
-if (!$medicoActual && !empty($medicosLista)) {
+if (!$medicoActual && !array_key_exists('id_medico', $_GET) && !empty($medicosLista)) {
     // Seleccionar primer médico por defecto si no hay uno válido
     $idMedicoSel = (int)$medicosLista[0]['id_medico'];
     $medicoActual = $medicosLista[0];
+}
+if (array_key_exists('id_medico', $_GET) && !$medicoActual) {
+    $errores[] = 'Selecciona un médico activo válido.';
+    $idMedicoSel = false;
+    http_response_code(400);
 }
 
 // Obtener citas del médico para la fecha

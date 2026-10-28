@@ -2,8 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/includes/auth.php';
 
-if (cvs_usuario_actual() !== null) {
-    header('Location: index.php', true, 303);
+if (($actual = cvs_usuario_actual()) !== null) {
+    header('Location: ' . cvs_destino_inicio($actual['rol']), true, 303);
     exit;
 }
 
@@ -29,15 +29,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($ahora < $limite['bloqueado_hasta']) {
         $error = 'Demasiados intentos fallidos. Espera 15 minutos desde el bloqueo antes de intentarlo nuevamente.';
     } elseif ($nombre === '' || $contrasena === '') {
-        $error = 'Completa el nombre de usuario y la contraseña.';
-    } elseif (preg_match('//u', $nombre) !== 1 || preg_match_all('/./us', $nombre) > 60 || strlen($contrasena) > 4096) {
+        $error = 'Completa el usuario o correo y la contraseña.';
+    } elseif (preg_match('//u', $nombre) !== 1 || preg_match_all('/./us', $nombre) > 150 || str_contains($nombre, "\0") || str_contains($contrasena, "\0") || strlen($contrasena) > 4096) {
         $error = 'Usuario o contraseña incorrectos.';
     } else {
         try {
             $consulta = cvs_conexion()->prepare('SELECT u.id_usuario, u.id_rol, u.nombre_usuario, u.contrasena_hash, u.activo, r.nombre AS rol
-                FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol WHERE u.nombre_usuario = :nombre');
-            $consulta->execute([':nombre'=>$nombre]);
-            $usuario = $consulta->fetch(PDO::FETCH_ASSOC);
+                FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol
+                WHERE u.nombre_usuario = :nombre OR LOWER(TRIM(u.correo)) = LOWER(:correo) LIMIT 2');
+            $consulta->execute([':nombre'=>$nombre, ':correo'=>$nombre]);
+            $coincidencias = $consulta->fetchAll(PDO::FETCH_ASSOC);
+            // Una identidad ambigua heredada nunca autentica a la primera coincidencia.
+            $usuario = count($coincidencias) === 1 ? $coincidencias[0] : null;
         } catch (PDOException $ex) {
             cvs_error_base_datos($ex);
         }
@@ -49,8 +52,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             cvs_olvidar_autenticacion(); // Regenera el ID y el token CSRF.
             unset($_SESSION['cvs_intentos']);
             cvs_guardar_identidad($usuario);
+            $destino = cvs_destino_inicio($usuario['rol']);
             unset($usuario);
-            header('Location: index.php', true, 303);
+            header('Location: ' . $destino, true, 303);
             exit;
         }
         unset($usuario);
@@ -101,11 +105,11 @@ unset($_SESSION['cvs_login_aviso']);
 <?php if ($aviso['error'] !== ''): ?><div class="error" role="alert"><?= cvs_escapar($aviso['error']) ?></div><?php endif; ?>
 <form method="post" action="login.php">
 <input type="hidden" name="csrf" value="<?= cvs_escapar(cvs_csrf_token()) ?>">
-<div class="campo"><label for="nombre_usuario">Nombre de usuario</label><input id="nombre_usuario" name="nombre_usuario" maxlength="60" autocomplete="username" autocapitalize="none" spellcheck="false" required value="<?= cvs_escapar($aviso['nombre']) ?>"></div>
+<div class="campo"><label for="nombre_usuario">Nombre de usuario o correo electrónico</label><input id="nombre_usuario" name="nombre_usuario" maxlength="150" autocomplete="username" autocapitalize="none" spellcheck="false" required value="<?= cvs_escapar($aviso['nombre']) ?>"></div>
 <div class="campo"><label for="contrasena">Contraseña</label><input id="contrasena" name="contrasena" type="password" maxlength="4096" autocomplete="current-password" required></div>
 <button type="submit">Iniciar sesión</button>
 </form>
-<p class="nota">Entorno local de desarrollo · RF01.<br>Gestión de pacientes: administrador y recepcionista. Gestión de especialidades: únicamente administrador. Médico y paciente tendrán pantallas específicas posteriormente.</p>
+<p class="nota">Acceso según tu rol. Médicos y pacientes consultan exclusivamente sus registros vinculados.</p>
 </div>
 </section>
 </main>

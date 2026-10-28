@@ -20,7 +20,21 @@ function cvs_conexion(): PDO {
     try {
         // Carga diferida: las páginas anónimas no necesitan conectarse.
         // Suprime advertencias de carga que podrían revelar la ruta privada.
-        @require 'C:/xampp/config_clinica/database.php';
+        if (getenv('CVS_DB_HOST') !== false) {
+            $host = (string)getenv('CVS_DB_HOST');
+            $puerto = getenv('CVS_DB_PORT') ?: '5432';
+            $base = (string)getenv('CVS_DB_NAME');
+            $ssl = getenv('CVS_DB_SSLMODE') ?: 'require';
+            foreach ([$host, $base] as $parte) {
+                if ($parte === '' || preg_match('/[;\x00-\x20]/', $parte)) throw new RuntimeException('Configuración inválida.');
+            }
+            if (!ctype_digit($puerto) || (int)$puerto < 1 || (int)$puerto > 65535
+                || !in_array($ssl, ['disable', 'require', 'verify-ca', 'verify-full'], true)) throw new RuntimeException('Configuración inválida.');
+            $conexion = new PDO("pgsql:host=$host;port=$puerto;dbname=$base;sslmode=$ssl;connect_timeout=10",
+                (string)getenv('CVS_DB_USER'), (string)getenv('CVS_DB_PASSWORD'));
+        } else {
+            @require 'C:/xampp/config_clinica/database.php';
+        }
         if (!isset($conexion) || !($conexion instanceof PDO)) {
             throw new RuntimeException('Conexion PDO no disponible.');
         }

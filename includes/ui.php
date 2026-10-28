@@ -21,6 +21,9 @@ function cvsu_icono(string $clave): string
     $alias = array(
         'seleccionar_reprogramacion' => 'reprogramar',
         'reprogramar_cita' => 'reprogramar',
+        'mi_agenda' => 'agenda',
+        'mis_citas' => 'citas',
+        'usuarios' => 'pacientes',
     );
     $clave = $alias[$clave] ?? $clave;
 
@@ -71,6 +74,7 @@ function cvsu_paginas(?array $usuario): array
     }
     if ($rol === 'administrador') {
         return array_merge($inicio, array(
+            array('Usuarios', 'usuarios.php'),
             array('Pacientes', 'pacientes.php'),
             array('Médicos', 'medicos.php'),
             array('Especialidades', 'especialidades.php'),
@@ -96,6 +100,8 @@ function cvsu_paginas(?array $usuario): array
         ));
     }
 
+    if ($rol === 'medico') return array_merge($inicio, [['Mi agenda', 'mi_agenda.php']]);
+    if ($rol === 'paciente') return array_merge($inicio, [['Mis citas y perfil', 'mis_citas.php']]);
     return $inicio;
 }
 

@@ -35,6 +35,9 @@ function cvsr_hoy(): DateTimeImmutable
  */
 function cvsr_validar_filtros(array $consulta): array
 {
+    foreach ($consulta as $clave=>$valor) {
+        if (!is_string($valor) || str_contains($valor, "\0")) $consulta[$clave] = '__invalido__';
+    }
     $zona = new DateTimeZone('America/La_Paz');
     $hoy = new DateTimeImmutable('today', $zona);
     $errores = [];
@@ -87,11 +90,13 @@ function cvsr_validar_filtros(array $consulta): array
     // Paginaciones acotadas.
     $paginaCitas = cvsr_pagina($consulta['p'] ?? null);
     $paginaPacientes = cvsr_pagina($consulta['pp'] ?? null);
+    $agendaFecha = cvsr_parsear_fecha((string)($consulta['ag_fecha'] ?? ''), $hoy->format('Y-m-d'));
+    if ($agendaFecha === null) $errores[] = 'La fecha de la agenda no es válida.';
 
     return [
         'tipo' => $tipo,
-        'desde' => $desde,
-        'hasta' => $hasta,
+        'desde' => $desde ?? $hoy->modify('first day of this month'),
+        'hasta' => $hasta ?? $hoy,
         'desde_str' => (string) ($consulta['desde'] ?? ''),
         'hasta_str' => (string) ($consulta['hasta'] ?? ''),
         'id_medico' => $medico,
@@ -101,7 +106,7 @@ function cvsr_validar_filtros(array $consulta): array
         'pagina_pacientes' => $paginaPacientes,
         'q' => cvsr_texto_busqueda($consulta['q'] ?? ''),
         'ag_id_medico' => cvsr_entero_positivo($consulta['ag_id_medico'] ?? null),
-        'ag_fecha' => cvsr_parsear_fecha((string) ($consulta['ag_fecha'] ?? ''), $hoy->format('Y-m-d')),
+        'ag_fecha' => $agendaFecha ?? $hoy,
         'ag_fecha_str' => (string) ($consulta['ag_fecha'] ?? ''),
         'errores' => $errores,
         'avisos' => $avisos,
@@ -177,22 +182,22 @@ function cvsr_porcentaje(int $parte, int $total): int
  */
 function cvsr_condiciones(array $val, string $nivelFiltros): array
 {
-    $sql = 'fecha BETWEEN :desde AND :hasta';
+    $sql = 'c.fecha BETWEEN :desde AND :hasta';
     $parametros = [
         ':desde' => $val['desde']->format('Y-m-d'),
         ':hasta' => $val['hasta']->format('Y-m-d'),
     ];
     if ($nivelFiltros === 'citas') {
         if ($val['id_medico'] !== null) {
-            $sql .= ' AND id_medico = :id_medico';
+            $sql .= ' AND c.id_medico = :id_medico';
             $parametros[':id_medico'] = $val['id_medico'];
         }
         if ($val['id_especialidad'] !== null) {
-            $sql .= ' AND id_especialidad = :id_especialidad';
+            $sql .= ' AND c.id_especialidad = :id_especialidad';
             $parametros[':id_especialidad'] = $val['id_especialidad'];
         }
         if ($val['estado'] !== '') {
-            $sql .= ' AND estado = :estado';
+            $sql .= ' AND c.estado = :estado';
             $parametros[':estado'] = $val['estado'];
         }
     }
@@ -217,7 +222,7 @@ function cvsr_consultar(PDO $pdo, string $sql, array $parametros, array $enteros
 function cvsr_resumen_estados(PDO $pdo, array $val): array
 {
     [$cond, $parametros] = cvsr_condiciones($val, 'citas');
-    $sql = "SELECT estado, COUNT(*) AS total FROM citas WHERE {$cond} GROUP BY estado";
+    $sql = "SELECT estado, COUNT(*) AS total FROM citas c WHERE {$cond} GROUP BY estado";
     $filas = cvsr_consultar($pdo, $sql, $parametros);
     $mapa = array_fill_keys(CVSR_ESTADOS, 0);
     foreach ($filas as $fila) {
@@ -251,7 +256,7 @@ function cvsr_listado_citas(PDO $pdo, array $val, int $desplazamiento, int $limi
     $stmt->bindValue(':desplazamiento', $desplazamiento, PDO::PARAM_INT);
     $stmt->execute();
 
-    $sqlTotal = "SELECT COUNT(*) FROM citas WHERE {$cond}";
+    $sqlTotal = "SELECT COUNT(*) FROM citas c WHERE {$cond}";
     $stmtTotal = $pdo->prepare($sqlTotal);
     foreach ($parametros as $clave => $valor) {
         $stmtTotal->bindValue($clave, $valor, PDO::PARAM_STR);

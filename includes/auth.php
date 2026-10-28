@@ -22,6 +22,17 @@ function cvs_guardar_identidad(array $usuario): void {
         'rol'=>(string)$usuario['rol']
     ];
     $_SESSION['cvs_ultima_actividad'] = time();
+    if (isset($usuario['contrasena_hash'])) {
+        $_SESSION['cvs_firma_clave'] = hash('sha256', $usuario['contrasena_hash']);
+    }
+}
+
+function cvs_destino_inicio(string $rol): string {
+    return match ($rol) {
+        'medico' => 'mi_agenda.php',
+        'paciente' => 'mis_citas.php',
+        default => 'index.php'
+    };
 }
 
 function cvs_usuario_actual(): ?array {
@@ -34,14 +45,16 @@ function cvs_usuario_actual(): ?array {
     }
     try {
         // Revalidar en cada petición: no autorizar con un rol antiguo de la sesión.
-        $consulta = cvs_conexion()->prepare('SELECT u.id_usuario, u.id_rol, u.nombre_usuario, u.activo, r.nombre AS rol
+        $consulta = cvs_conexion()->prepare('SELECT u.id_usuario, u.id_rol, u.nombre_usuario, u.activo, u.contrasena_hash, r.nombre AS rol
             FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol WHERE u.id_usuario = :id');
         $consulta->execute([':id'=>$id]);
         $usuario = $consulta->fetch(PDO::FETCH_ASSOC);
     } catch (PDOException $ex) {
         cvs_error_base_datos($ex);
     }
-    if (!$usuario || !cvs_activo($usuario['activo']) || !cvs_rol_valido($usuario['rol'])) {
+    if (!$usuario || !cvs_activo($usuario['activo']) || !cvs_rol_valido($usuario['rol'])
+        || !isset($_SESSION['cvs_firma_clave'])
+        || !hash_equals($_SESSION['cvs_firma_clave'], hash('sha256', $usuario['contrasena_hash']))) {
         cvs_olvidar_autenticacion();
         return null;
     }

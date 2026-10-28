@@ -628,7 +628,7 @@ if ($tipo === 'pacientes' && $falloBD === false && $falloConsulta === false):
 /* ---------------------------------------------------------------
  * F) AGENDA DIARIA POR MDICO
  * --------------------------------------------------------------- */
-if ($tipo === 'agenda' && $falloBD === false && $falloConsulta === false):
+if ($tipo === 'agenda' && $falloBD === false && $falloConsulta === false && !$val['errores']):
 ?>
 <section class="dash-panel" aria-labelledby="rep-titulo-agenda">
 <div class="dash-cabecera">

@@ -35,7 +35,8 @@ function cvs_olvidar_autenticacion(): void {
 if (session_status() !== PHP_SESSION_ACTIVE) {
     $https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '' && strtolower((string)$_SERVER['HTTPS']) !== 'off')
         || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
-    // No confiar en X-Forwarded-Proto enviado por el cliente; XAMPP termina la conexión.
+    // HTTPS público detrás de proxy: configuración del servidor, nunca una cabecera del cliente.
+    $https = $https || getenv('CVS_HTTPS') === '1';
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
     ini_set('session.use_trans_sid', '0');

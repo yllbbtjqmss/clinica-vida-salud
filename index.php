@@ -7,6 +7,8 @@ $usuario = cvs_usuario_actual();
 $nombresRoles = ['administrador'=>'Administrador', 'recepcionista'=>'Recepcionista', 'medico'=>'Médico', 'paciente'=>'Paciente'];
 
 $menus = [
+    'medico' => [['mi_agenda.php', 'Mi agenda', 'Consulta tus citas y horarios de atención.']],
+    'paciente' => [['mis_citas.php', 'Mis citas y perfil', 'Consulta tus próximas citas, citas anteriores y datos básicos.']],
     'recepcionista' => [
         ['pacientes.php', 'Pacientes', 'Registrar y administrar los pacientes activos de la clínica.'],
         ['citas.php', 'Registrar citas', 'Programar nuevas citas para los pacientes.'],
@@ -21,8 +23,8 @@ $modulos = $usuario !== null ? ($menus[$usuario['rol']] ?? []) : [];
 $avisoPersonal = null;
 if ($usuario !== null && ($usuario['rol'] === 'medico' || $usuario['rol'] === 'paciente')) {
     $avisoPersonal = match ($usuario['rol']) {
-        'medico' => 'Las funciones personales del rol de médico todavía no están integradas al sistema. No se otorga acceso a las agendas de otros médicos.',
-        'paciente' => 'La consulta personal de tus citas estará disponible cuando se habilite la pantalla correspondiente.',
+        'medico' => 'Consulta tus citas desde Mi agenda.',
+        'paciente' => 'Consulta tus citas desde Mis citas y perfil.',
         default => 'Tu rol aún no tiene módulos disponibles en esta versión del sistema.'
     };
 }

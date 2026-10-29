@@ -1,0 +1,33 @@
+# Lista permitida: nada mas entra en el contexto de construccion.
+**
+!Dockerfile
+!.dockerignore
+!deploy/
+!deploy/apache.conf
+!deploy/php.ini
+!deploy/apache-start.sh
+!/*.php
+!includes/
+!includes/*.php
+!assets/
+!assets/**
+!scripts/
+!scripts/*.php
+
+# Excluir secretos/copias incluso dentro de las carpetas permitidas.
+**/.git
+**/.env
+**/.env.*
+**/database.php
+**/config/
+**/config_clinica/
+**/*.sql
+**/*.dump
+**/*.backup
+**/*.log
+**/*.bak
+**/*.old
+**/*.pem
+**/*.key
+**/id_rsa*
+**/id_ed25519*

@@ -247,7 +247,9 @@ Resultados ejecutados y alcance: [resultados JSON](documentacion/Ciclo_2_Grupo_1
 
 ## ☁️ Preparación de despliegue
 
-Se incluye Docker PHP 8.2/Apache, instalación de extensiones, configuración PostgreSQL por entorno y cookies Secure mediante `CVS_HTTPS=1` para una entrada pública HTTPS. Guía reproducible y plataforma propuesta: [deploy/DESPLIEGUE.md](deploy/DESPLIEGUE.md). No se desplegó, no se migraron datos personales y no existe una URL pública acreditada. La imagen Docker aún requiere construcción y validación en un equipo con Docker.
+Preparación para un **Web Service Docker de Render**, desde la rama **`ciclo2-desarrollo`**, conectado a la instancia existente **`clinica-vida-salud-db`**. Incluye PHP 8.2/Apache, `pdo_pgsql`, puerto dinámico `PORT` (10000 por defecto), conexión por `CVS_DB_*` y cookies Secure con `CVS_HTTPS=1`. XAMPP conserva su configuración privada externa sin cambios.
+
+La [guía de despliegue](deploy/DESPLIEGUE.md) detalla las variables, la importación del esquema **solo a Render**, sin exportar datos locales, y los campos del futuro Web Service. Ver [resultados y comprobaciones pendientes](deploy/REVISION.md). **Docker no está instalado en este equipo: construir y ejecutar el contenedor sigue pendiente.** No se publicó el sistema ni se realizó una importación a Render; no se copiaron datos personales. El plan PostgreSQL gratuito expira a los 30 días: revisar su vigencia antes de la defensa.
 
 ---
 

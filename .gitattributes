@@ -1,0 +1,2 @@
+# El script de inicio debe funcionar en Linux tambien desde un checkout de Windows.
+/deploy/*.sh text eol=lf

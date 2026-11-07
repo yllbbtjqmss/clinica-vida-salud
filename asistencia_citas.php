@@ -265,7 +265,7 @@ $csrf = cvs_csrf_token();
 <div><dt>Médico</dt><dd><?= cvs_escapar($confirmar['medico']) ?></dd></div>
 <div><dt>Especialidad</dt><dd><?= cvs_escapar($confirmar['especialidad']) ?></dd></div>
 <div><dt>Fecha y horario · America/La_Paz</dt><dd><?= cvs_escapar($confirmar['fecha']) ?> · <?= cvs_escapar($confirmar['hora_inicio']) ?> a <?= cvs_escapar($confirmar['hora_fin']) ?></dd></div>
-<div><dt>Estado actual</dt><dd><?= cvs_escapar($estados[$confirmar['estado']] ?? $confirmar['estado']) ?></dd></div>
+<div><dt>Estado actual</dt><dd><span class="etiqueta est-<?= cvs_escapar($confirmar['estado']) ?>"><?= cvs_escapar($estados[$confirmar['estado']] ?? $confirmar['estado']) ?></span></dd></div>
 </dl>
 <form method="post" action="asistencia_citas.php">
 <input type="hidden" name="csrf" value="<?= cvs_escapar($csrf) ?>">
@@ -293,7 +293,7 @@ $csrf = cvs_csrf_token();
 <?php foreach ($lista as $cita): ?>
 <tr>
 <td><?= cvs_escapar($cita['codigo']) ?></td><td><?= cvs_escapar($cita['paciente']) ?></td><td><?= cvs_escapar($cita['medico']) ?></td><td><?= cvs_escapar($cita['especialidad']) ?></td><td><?= cvs_escapar($cita['fecha']) ?></td><td><?= cvs_escapar($cita['hora_inicio']) ?><br>a <?= cvs_escapar($cita['hora_fin']) ?></td>
-<td><span class="etiqueta <?= $cita['estado'] === 'cancelada' ? 'cancelada' : '' ?>"><?= cvs_escapar($estados[$cita['estado']] ?? $cita['estado']) ?></span></td>
+<td><span class="etiqueta est-<?= cvs_escapar($cita['estado']) ?>"><?= cvs_escapar($estados[$cita['estado']] ?? $cita['estado']) ?></span></td>
 <td><?php if (cvs_activo($cita['registrable'])): ?>
 <p class="disponible">Horario finalizado</p>
 <div class="acciones">

@@ -419,6 +419,15 @@ try {
         </form>
     </section>
 
+    <?php
+    $etiquetasEstado = [
+        'programada' => 'Programada',
+        'confirmada' => 'Confirmada',
+        'atendida' => 'Atendida',
+        'cancelada' => 'Cancelada',
+        'inasistencia' => 'Inasistencia',
+    ];
+    ?>
     <section class="panel" id="citas-listado">
         <h2>Citas registradas</h2>
         <div class="tabla">
@@ -454,7 +463,7 @@ try {
                             <td><?= e($c['fecha']) ?></td>
                             <td><?= e(substr($c['hora_inicio'], 0, 5)) ?></td>
                             <td><?= e(substr($c['hora_fin'], 0, 5)) ?></td>
-                            <td><?= e($c['estado']) ?></td>
+                            <td><span class="etiqueta est-<?= e($c['estado']) ?>"><?= e($etiquetasEstado[$c['estado']] ?? $c['estado']) ?></span></td>
                             <td><?= $c['motivo'] !== null ? e($c['motivo']) : '�?"' ?></td>
                             <td>
                                 <?php if (in_array($c['estado'], ['programada', 'confirmada'], true)): ?>

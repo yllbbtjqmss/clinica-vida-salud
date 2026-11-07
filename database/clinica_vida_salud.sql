@@ -138,3 +138,9 @@ COMMIT;
 -- SELECT table_name FROM information_schema.tables
 -- WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
 -- ORDER BY table_name;
+
+-- Instalacion nueva con psql: incorporar el modulo posterior al Ciclo 2.
+-- Esta inclusion es relativa a este archivo, no al directorio de la consola.
+-- No ejecutar nuevamente el esquema base sobre una instalacion existente.
+\ir migraciones/20261104_reservas_pagos.sql
+\ir migraciones/20261105_metodos_online.sql

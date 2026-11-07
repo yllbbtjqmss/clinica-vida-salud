@@ -137,6 +137,7 @@ function cvsd_medicos_activos(PDO $pdo): array
  */
 function cvsd_disponibilidad_del_dia(PDO $pdo, DateTimeImmutable $fecha): array
 {
+    require_once __DIR__ . '/reservas_pagos.php';
     $fechaYmd = $fecha->format('Y-m-d');
     $diaSemana = (int) $fecha->format('N');
     $esHoy = $fechaYmd === cvsd_hoy()->format('Y-m-d');
@@ -182,6 +183,12 @@ function cvsd_disponibilidad_del_dia(PDO $pdo, DateTimeImmutable $fecha): array
     $ocupadasPorMedico = [];
     foreach ($stmtC->fetchAll() as $c) {
         $ocupadasPorMedico[(int) $c['id_medico']][] = $c;
+    }
+    if (cvp_disponible($pdo)) {
+        $stmtR=$pdo->prepare("SELECT id_medico,hora_inicio,hora_fin FROM reservas_temporales
+            WHERE estado='activa' AND vence_en>clock_timestamp() AND fecha=:fecha");
+        $stmtR->execute([':fecha'=>$fechaYmd]);
+        foreach ($stmtR->fetchAll() as $r) $ocupadasPorMedico[(int)$r['id_medico']][]=$r;
     }
 
     $salida = [];

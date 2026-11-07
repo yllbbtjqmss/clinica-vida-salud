@@ -1,0 +1,278 @@
+{
+  "fecha_utc": "2026-11-07T00:35:17.369135+00:00",
+  "entorno": "Cluster PostgreSQL nuevo, efimero, loopback; sin bases reales",
+  "pruebas": [
+    {
+      "id": "M01",
+      "caso": "Migracion incremental preserva cita y exclusion originales; no inventa pagos",
+      "estado": "OK"
+    },
+    {
+      "id": "M02",
+      "caso": "Compatibilidad con esquema anterior y migracion nueva preserva todos los campos historicos",
+      "estado": "OK"
+    },
+    {
+      "id": "P01",
+      "caso": "Paciente reserva solo para su ficha aunque manipule id_paciente",
+      "estado": "OK"
+    },
+    {
+      "id": "P02",
+      "caso": "Precio exacto del servidor; entrada manipulada y cotización obsoleta",
+      "estado": "OK"
+    },
+    {
+      "id": "P03",
+      "caso": "Pago presencial pendiente y horario ocupado",
+      "estado": "OK"
+    },
+    {
+      "id": "P04",
+      "caso": "Recepción registra cobro completo verificado",
+      "estado": "OK"
+    },
+    {
+      "id": "P05",
+      "caso": "Doble cobro y doble envío no duplican movimientos",
+      "estado": "OK"
+    },
+    {
+      "id": "P06",
+      "caso": "Paciente no aprueba pagos; respuesta demo autorizada e idempotente",
+      "estado": "OK"
+    },
+    {
+      "id": "P07",
+      "caso": "Aprobación demo crea cita confirmada, no atendida",
+      "estado": "OK"
+    },
+    {
+      "id": "P08",
+      "caso": "Rechazo libera reserva sin confirmar cita",
+      "estado": "OK"
+    },
+    {
+      "id": "P09",
+      "caso": "Vencimiento libera intervalo al escribir, sin cron ni JavaScript",
+      "estado": "OK"
+    },
+    {
+      "id": "P10",
+      "caso": "Exclusión cruzada rechaza INSERT legado sobre reserva temporal",
+      "estado": "OK"
+    },
+    {
+      "id": "P11",
+      "caso": "Paciente no accede a operaciones de otro paciente",
+      "estado": "OK"
+    },
+    {
+      "id": "P12",
+      "caso": "Médico y paciente no pueden registrar cobros",
+      "estado": "OK"
+    },
+    {
+      "id": "P13",
+      "caso": "Solo administrador cambia tarifas; acuerdos anteriores inmutables",
+      "estado": "OK"
+    },
+    {
+      "id": "P14",
+      "caso": "Citas sin cuenta financiera conservan reprogramación y cancelación",
+      "estado": "OK"
+    },
+    {
+      "id": "P15",
+      "caso": "Reprogramación conserva pago; cancelación solicita pero no devuelve",
+      "estado": "OK"
+    },
+    {
+      "id": "P16",
+      "caso": "Reportes exactos separan cobros reales, devoluciones y simulaciones",
+      "estado": "OK"
+    },
+    {
+      "id": "P18",
+      "caso": "Pago tardío queda en revisión sin recuperar el turno reasignado",
+      "estado": "OK"
+    },
+    {
+      "id": "P19",
+      "caso": "Pendiente no confirma cita; vencimiento forzado es solo administrador",
+      "estado": "OK"
+    },
+    {
+      "id": "P20",
+      "caso": "Cancelar pendiente anula deuda, conserva movimientos e impide cobrar",
+      "estado": "OK"
+    },
+    {
+      "id": "P21",
+      "caso": "Referencias de cobro únicas; registro de movimientos no editable",
+      "estado": "OK"
+    },
+    {
+      "id": "P22",
+      "caso": "Sin tarifa, fechas pasadas o bloques fuera del horario no se reserva",
+      "estado": "OK"
+    },
+    {
+      "id": "P23",
+      "caso": "Pago demo mantiene el importe pactado aunque cambie la tarifa antes de aprobar",
+      "estado": "OK"
+    },
+    {
+      "id": "P24",
+      "caso": "Perfil desactivado durante la espera: no se confirma cita y el pago se revisa",
+      "estado": "OK"
+    },
+    {
+      "id": "P25",
+      "caso": "Reprogramación SQL a un bloqueo temporal se revierte sin perder la cita",
+      "estado": "OK"
+    },
+    {
+      "id": "P26",
+      "caso": "Dos respuestas exitosas con claves distintas tampoco duplican el cobro",
+      "estado": "OK"
+    },
+    {
+      "id": "P27",
+      "caso": "Tarjeta requiere solicitud, referencia controlada y administrador; rechazo libera turno",
+      "estado": "OK"
+    },
+    {
+      "id": "P28",
+      "caso": "QR y tarjeta quedan diferenciados e inmutables; reportes separados y filtrados",
+      "estado": "OK"
+    },
+    {
+      "id": "C01",
+      "caso": "Dos procesos y conexiones simultaneos: solo una reserva para el mismo intervalo",
+      "estado": "OK"
+    },
+    {
+      "id": "C02",
+      "caso": "Dos cobros simultaneos generan un unico movimiento monetario",
+      "estado": "OK"
+    },
+    {
+      "id": "C03",
+      "caso": "INSERT legado y reserva temporal simultaneos comparten exclusion",
+      "estado": "OK"
+    },
+    {
+      "id": "H01",
+      "caso": "Acceso HTTP por roles y medico sin gestion financiera",
+      "estado": "OK"
+    },
+    {
+      "id": "H02",
+      "caso": "Aislamiento de ficha y pagos de otro paciente por HTTP",
+      "estado": "OK"
+    },
+    {
+      "id": "P17",
+      "caso": "Comprobantes HTTP separan demostracion y constancia presencial no fiscal",
+      "estado": "OK"
+    },
+    {
+      "id": "H03",
+      "caso": "CSRF invalido rechaza modificacion de tarifas",
+      "estado": "OK"
+    },
+    {
+      "id": "H04",
+      "caso": "Paginas originales y nuevas renderizan con esquema ampliado",
+      "estado": "OK"
+    },
+    {
+      "id": "H05",
+      "caso": "Flujo HTTP paciente: seleccion, resumen validado, pago presencial y ficha propia",
+      "estado": "OK"
+    },
+    {
+      "id": "H06",
+      "caso": "Cobro HTTP recepcion, QR verificado y reenvio idempotente",
+      "estado": "OK"
+    },
+    {
+      "id": "H07",
+      "caso": "Simulacion HTTP: paciente no falsifica aprobacion; administrador confirma cita",
+      "estado": "OK"
+    },
+    {
+      "id": "H08",
+      "caso": "Registro administrativo existente crea cita y cuenta pendiente preservando el formulario",
+      "estado": "OK"
+    },
+    {
+      "id": "H09",
+      "caso": "Reprogramacion y cancelacion HTTP originales conservan el pago y registran revision",
+      "estado": "OK"
+    },
+    {
+      "id": "H10",
+      "caso": "Ficha descargable autocontenida conserva estilos y rotulo de demostracion",
+      "estado": "OK"
+    },
+    {
+      "id": "H11",
+      "caso": "Tarjeta HTTP: lista cerrada, sin PAN/CVV, solicitud idempotente sin aprobacion y comprobante autorizado",
+      "estado": "OK"
+    },
+    {
+      "id": "H12",
+      "caso": "Vista QR fija sin generador: importe, referencia, estado, plazo y aviso discreto; ausencia del archivo controlada",
+      "estado": "OK"
+    },
+    {
+      "id": "H13",
+      "caso": "Ficha QR activa reutiliza imagen y descarga autocontenida; no inventa QR si falta el recurso",
+      "estado": "OK"
+    },
+    {
+      "id": "B01",
+      "caso": "Navegador: modalidad anidada, selección de tarjeta, campos sintéticos formateados de solo lectura",
+      "estado": "OK"
+    },
+    {
+      "id": "B02",
+      "caso": "Navegador: campos manipulados bloqueados, envío sin PAN/CVV y procesamiento sin aprobación del cliente",
+      "estado": "OK"
+    },
+    {
+      "id": "B03",
+      "caso": "Navegador: rechazo autorizado de tarjeta se refleja en la cuenta del paciente",
+      "estado": "OK"
+    },
+    {
+      "id": "B04",
+      "caso": "Sin archivo adjunto: aviso controlado con y sin JavaScript, datos visibles y contador activo; imagen pendiente",
+      "estado": "OK"
+    },
+    {
+      "id": "B05",
+      "caso": "Responsive 360/390/768/1440, tablas de escritorio sin scroll, aviso visible en impresión y sin solicitudes externas",
+      "estado": "OK"
+    }
+  ],
+  "imagen_qr": "Pendiente: guardar el adjunto original en assets/img/qr-pago-demo.png",
+  "navegador": {
+    "motor": "Chromium (Edge si está instalado)",
+    "version": "156.0.4314.58",
+    "anchos": [
+      360,
+      390,
+      768,
+      1440
+    ],
+    "imagen_qr": "Pendiente: guardar el adjunto original en assets/img/qr-pago-demo.png"
+  },
+  "versiones": {
+    "php": "PHP 8.2.12 (cli) (built: Oct 24 2023 21:15:15) (ZTS Visual C++ 2019 x64)",
+    "psql": "psql (PostgreSQL) 18.6"
+  },
+  "resultado": "OK"
+}

@@ -20,27 +20,50 @@ Proyecto universitario que centraliza pacientes, oferta médica, horarios y rese
 | Despliegue | Publicación y pruebas funcionales en Render confirmadas manualmente por el equipo |
 | Revisión pública | Portada y `login.php` respondieron HTTP 200, sin autenticación; no equivale a repetir las pruebas funcionales |
 
-## Índice
+<a id="reservas-pagos"></a>
 
-1. [Presentación](#presentacion)
-2. [Descripción general y objetivos](#descripcion-general)
-3. [Estado actual del proyecto](#estado-actual)
-4. [Funcionalidades principales](#funcionalidades)
-5. [Roles y permisos](#roles-permisos)
-6. [Tecnologías utilizadas](#tecnologias)
-7. [Arquitectura y estructura real](#arquitectura)
-8. [Base de datos](#base-datos)
-9. [Usuarios de prueba y demostración](#usuarios-demostracion)
-10. [Requisitos previos](#requisitos)
-11. [Instalación y configuración local](#instalacion-local)
-12. [Despliegue en Render](#render)
-13. [Manual breve de uso](#manual-uso)
-14. [Pruebas funcionales y resultados](#pruebas)
-15. [Bitácoras del proyecto](#bitacoras)
-16. [Integrantes del equipo](#equipo)
-17. [Organización del trabajo y control de versiones](#control-versiones)
-18. [Limitaciones, mejoras futuras y conclusión](#limitaciones)
-19. [Licencia y créditos](#creditos)
+## Incremento local: reservas y pagos — 04/11/2026
+
+**Desarrollo posterior al Ciclo 2, en `feature/reservas-pagos`; todavía no desplegado.** La tabla anterior y las secciones de referencia de los ciclos conservan el estado histórico del 02/11/2026. Para esta rama local, las capacidades y el esquema ampliados se detallan en [la guía técnica de reservas y pagos](documentacion/RESERVAS_Y_PAGOS.md).
+
+| Capacidad nueva | Alcance implementado |
+|---|---|
+| Reserva del paciente | Especialidad, médico, disponibilidad, resumen validado en servidor y ficha propia |
+| Tarifas | Precio positivo en BOB por médico–especialidad; edición administrativa, consulta por recepción e importe acordado inmutable |
+| Pago presencial | Cita programada con pago pendiente; cobro completo verificado en efectivo o QR de recepción, con referencia y responsable |
+| Pago en línea | **MODO DEMOSTRACIÓN — NO SE REALIZAN TRANSACCIONES REALES**; respuestas simuladas solo por administrador |
+| Bloqueo temporal | Hasta 10 minutos, exclusión común con citas, vencimiento en servidor sin cron y tratamiento del pago tardío |
+| Fichas y comprobantes | Consulta propia, impresión/PDF del navegador y ficha HTML autocontenida; sin factura fiscal ni recibo bancario ficticio |
+| Cancelación/reprogramación | Preservan el acuerdo y los movimientos; cancelación pagada solicita revisión, no devuelve automáticamente |
+| Reportes económicos | Cobros, pendientes y devoluciones; libros presencial y demostración separados |
+
+**Instalación:** las ocho tablas originales se conservan y se agregan siete tablas. Para una base existente, revisar y aplicar manualmente **solo** [`database/migraciones/20261104_reservas_pagos.sql`](database/migraciones/20261104_reservas_pagos.sql). El esquema de instalación nueva incorpora ese archivo mediante `\ir` de `psql`; no ejecutar ambos sobre una base ya ampliada. No se han migrado las bases principales ni se cargan tarifas oficiales o de ejemplo.
+
+**Pruebas:** [40 casos ejecutados en un clúster nuevo y aislado](documentacion/pruebas-reservas-pagos.json), incluidos los flujos HTTP y tres escenarios con procesos concurrentes. Sintaxis PHP y JavaScript comprobadas. Quedan pendientes revisión visual/móvil, impresión real, construcción Docker y validación posterior en Render.
+
+```powershell
+python tests\ejecutar_reservas_pagos.py --php "C:\xampp\php\php.exe" --pg-bin "C:\Program Files\PostgreSQL\18\bin" --evidencia documentacion\pruebas-mejora-pagos.json
+```
+
+El runner utiliza exclusivamente bases efímeras de prueba, no la conexión privada local. Para probar manualmente con PHP/Apache de XAMPP sin cambiar el destino habitual, seguir [la guía de configuración local](documentacion/RESERVAS_Y_PAGOS.md#11-prueba-manual-con-php-de-xampp-sin-cambiar-la-base-actual). El módulo añade `CVS_PAGOS_DEMO` como interruptor del simulador; no configura una pasarela real.
+
+### Mejora de pagos — 05/11/2026, solo local
+
+**Pago en línea → Tarjeta o QR**, separados de **Pago presencial**. Tarjeta usa exclusivamente campos sintéticos de solo lectura: el servidor recibe una referencia controlada, nunca PAN/CVV. Desde el ajuste visual del 06/11, QR usa la imagen fija `assets/img/qr-pago-demo.png`, sin generador en esa pantalla. **Pendiente:** guardar allí el PNG original adjunto al chat; no se incluye una imagen sustituta. La aprobación sigue siendo exclusiva de administración, con libros de prueba/presencial separados. Ver [instalación de la imagen y recorrido QR](documentacion/QR_PAGO_FIJO.md).
+
+Se refinan checkout, textos, fichas, tablas y filtros económicos (fecha, médico, especialidad y estado), con fechas en La Paz e importes `Bs 100,00`. Una marca discreta identifica los entornos de prueba; no hay integración bancaria.
+
+**Nueva migración:** [`20261105_metodos_online.sql`](database/migraciones/20261105_metodos_online.sql), después de la anterior, solo en la base de prueba tras revisión. Agrega `metodo_online` y solicitudes auditadas, sin reetiquetar pagos históricos. La instalación nueva incorpora ambas migraciones. Consultar [estado de migraciones, seguridad y recorrido local](documentacion/RESERVAS_Y_PAGOS.md#actualización-profesional--05112026).
+
+**50 comprobaciones aprobadas** en el entorno aislado, incluidas cinco de navegador (Edge/Chromium), decodificación QR independiente y responsive. La evidencia nueva está en [`documentacion/pruebas-mejora-pagos.json`](documentacion/pruebas-mejora-pagos.json); el JSON de 40 casos del 04/11 se conserva como histórico. Para repetir la suite ampliada sin navegador (45 comprobaciones):
+
+```powershell
+python tests\ejecutar_reservas_pagos.py --evidencia documentacion\pruebas-mejora-pagos.json
+```
+
+Las instrucciones de la guía incluyen el complemento de navegador y decodificación independiente del QR. Todos los cambios permanecen locales; no se migraron las bases principales ni se publicó en Render.
+
+Los apartados de los Ciclos 1 y 2 que mencionan ocho tablas, consultas personales de solo lectura o ausencia de pagos/suite automática describen **esa línea base histórica**, no este nuevo incremento. Los documentos originales y los cambios previos del README se mantienen, sin recuperar el índice eliminado.
 
 <a id="descripcion-general"></a>
 
@@ -119,7 +142,7 @@ Los estados admitidos son `programada`, `confirmada`, `atendida`, `cancelada` e 
 
 ## Roles y permisos
 
-Los cuatro roles están definidos tanto en [el SQL](database/clinica_vida_salud.sql) como en [`includes/auth.php`](includes/auth.php). No existe un rol de superadministrador.
+Los cuatro roles están definidos tanto en [el SQL](database/clinica_vida_salud.sql) como en [`includes/auth.php`](includes/auth.php).
 
 | Rol real | Responsabilidad | Funcionalidades accesibles |
 |---|---|---|

@@ -222,6 +222,7 @@ $ahoraGenerado = new DateTimeImmutable('now', new DateTimeZone('America/La_Paz')
 <body>
 <?php require_once __DIR__ . '/includes/ui.php'; cvsu_area('reportes', 'Reportes administrativos'); ?>
 <main class="ui-contenido">
+<p><a class="boton secundario" href="reportes_financieros.php">Reportes económicos (cobros separados de demostración)</a></p>
 
 <div class="rep-intro">
 <div>

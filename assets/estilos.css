@@ -41,6 +41,15 @@ body{
 }
 a{color:var(--cv-2)}
 img{max-width:100%}
+.cvs-solo-lectura{
+  position:absolute;
+  width:1px;height:1px;
+  margin:-1px;padding:0;
+  overflow:hidden;
+  clip:rect(0 0 0 0);
+  white-space:nowrap;
+  border:0;
+}
 ::selection{background:var(--cv-5);color:var(--cv-0)}
 
 /* ---------- Estructura de la aplicación ---------- */

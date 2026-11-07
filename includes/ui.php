@@ -24,6 +24,10 @@ function cvsu_icono(string $clave): string
         'mi_agenda' => 'agenda',
         'mis_citas' => 'citas',
         'usuarios' => 'pacientes',
+        'reservar_cita' => 'citas',
+        'pagos' => 'reportes',
+        'tarifas' => 'especialidades',
+        'reportes_financieros' => 'reportes',
     );
     $clave = $alias[$clave] ?? $clave;
 
@@ -80,6 +84,9 @@ function cvsu_paginas(?array $usuario): array
             array('Especialidades', 'especialidades.php'),
             array('Horarios médicos', 'horarios.php'),
             array('Registrar citas', 'citas.php'),
+            array('Tarifas de consultas', 'tarifas.php'),
+            array('Pagos y cobros', 'pagos.php'),
+            array('Reportes económicos', 'reportes_financieros.php'),
             array('Reprogramar citas', 'seleccionar_reprogramacion.php'),
             array('Cancelar citas', 'cancelar_cita.php'),
             array('Control de asistencia', 'asistencia_citas.php'),
@@ -90,6 +97,8 @@ function cvsu_paginas(?array $usuario): array
     }
     if ($rol === 'recepcionista') {
         return array_merge($inicio, array(
+            array('Consultar tarifas', 'tarifas.php'),
+            array('Pagos y cobros', 'pagos.php'),
             array('Pacientes', 'pacientes.php'),
             array('Registrar citas', 'citas.php'),
             array('Reprogramar citas', 'seleccionar_reprogramacion.php'),
@@ -101,7 +110,9 @@ function cvsu_paginas(?array $usuario): array
     }
 
     if ($rol === 'medico') return array_merge($inicio, [['Mi agenda', 'mi_agenda.php']]);
-    if ($rol === 'paciente') return array_merge($inicio, [['Mis citas y perfil', 'mis_citas.php']]);
+    if ($rol === 'paciente') return array_merge($inicio, [
+        ['Reservar cita', 'reservar_cita.php'], ['Mis citas y perfil', 'mis_citas.php'], ['Mis reservas y pagos', 'pagos.php']
+    ]);
     return $inicio;
 }
 

@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/reservas_pagos.php';
 
 $esEndpointJson = isset($_GET['cargar_bloques']) && isset($_GET['fecha']);
 
@@ -26,6 +27,7 @@ if ($esEndpointJson) {
 }
 
 $conexion = cvs_conexion();
+$moduloPagos=cvp_disponible($conexion);
 
 $zonaClinica = new DateTimeZone('America/La_Paz');
 $hoy = new DateTimeImmutable('today', $zonaClinica);
@@ -99,6 +101,11 @@ if ($cita['medico_activo'] !== true && $cita['medico_activo'] !== 1 && $cita['me
 // Obtener bloques disponibles para reprogramación (AJAX)
 $bloquesDisponibles = [];
 if (isset($_GET['cargar_bloques']) && isset($_GET['fecha'])) {
+    if ($moduloPagos) {
+        try { cvp_expirar($conexion); echo json_encode(cvp_bloques($conexion,(int)$cita['id_medico'],cvs_texto($_GET,'fecha'),(int)$idCita)); }
+        catch (Throwable $ex) { http_response_code(400); echo json_encode(['error'=>$ex instanceof DomainException ? $ex->getMessage() : cvp_error($ex,'disponibilidad_reprogramacion')]); }
+        exit;
+    }
     $fechaB = trim($_GET['fecha']);
     $fB = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaB, $zonaClinica);
     if ($fB && $fB->format('Y-m-d') !== $fechaB) {
@@ -207,12 +214,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$errores) {
             try {
                 $conexion->beginTransaction();
+                if ($moduloPagos) cvp_bloquear($conexion,(int)cvs_usuario_actual()['id_usuario']);
                 // Verificar cita sigue reprogramable y datos actuales
-                $chkCita = $conexion->prepare("SELECT id_cita, id_medico, id_especialidad, estado FROM citas WHERE id_cita = :id_cita FOR UPDATE");
+                $chkCita = $conexion->prepare("SELECT id_cita, id_medico, id_especialidad, estado,
+                    fecha+hora_inicio>timezone('America/La_Paz',clock_timestamp()) AS reprogramable
+                    FROM citas WHERE id_cita = :id_cita FOR UPDATE");
                 $chkCita->bindValue(':id_cita', $idCita, PDO::PARAM_INT);
                 $chkCita->execute();
                 $citaChk = $chkCita->fetch();
-                if (!$citaChk || !in_array($citaChk['estado'], ['programada', 'confirmada'], true)) {
+                if (!$citaChk || !cvs_activo($citaChk['reprogramable']) || !in_array($citaChk['estado'], ['programada', 'confirmada'], true)) {
                     throw new Exception('La cita ya no se encuentra en estado reprogramable.');
                 }
                 $idMedChk = (int)$citaChk['id_medico'];

@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/pagos_ui.php';
 
 $esEndpointJson = (isset($_GET['cargar_medicos']) && isset($_GET['id_especialidad']))
     || (isset($_GET['cargar_bloques']) && isset($_GET['id_medico']) && isset($_GET['fecha']));
@@ -27,6 +28,8 @@ if ($esEndpointJson) {
 }
 
 $conexion = cvs_conexion();
+$moduloPagos = cvp_disponible($conexion);
+if ($moduloPagos) cvp_expirar($conexion);
 
 $zonaClinica = new DateTimeZone('America/La_Paz');
 $hoy = new DateTimeImmutable('today', $zonaClinica);
@@ -90,6 +93,11 @@ if (isset($_GET['cargar_medicos']) && isset($_GET['id_especialidad'])) {
             $mStmt->bindValue(':id_especialidad', $idEsp, PDO::PARAM_INT);
             $mStmt->execute();
             $medicosPorEsp = $mStmt->fetchAll();
+            if ($moduloPagos) foreach ($medicosPorEsp as &$medicoTarifa) {
+                try { $medicoTarifa['importe'] = cvp_tarifa($conexion,(int)$medicoTarifa['id_medico'],(int)$idEsp)['importe']; }
+                catch (DomainException $ex) { $medicoTarifa['importe'] = null; }
+            }
+            unset($medicoTarifa);
         } catch (PDOException $e) {
             error_log($e->getMessage());
         }
@@ -102,6 +110,11 @@ if (isset($_GET['cargar_medicos']) && isset($_GET['id_especialidad'])) {
 // Obtener bloques disponibles
 $bloquesDisponibles = [];
 if (isset($_GET['cargar_bloques']) && isset($_GET['id_medico']) && isset($_GET['fecha'])) {
+    if ($moduloPagos) {
+        try { echo json_encode(cvp_bloques($conexion,cvp_id($_GET['id_medico']),cvs_texto($_GET,'fecha'))); }
+        catch (Throwable $ex) { http_response_code(400); echo json_encode(['error'=>$ex instanceof DomainException ? $ex->getMessage() : cvp_error($ex,'disponibilidad_citas')]); }
+        exit;
+    }
     $idMedB = filter_var($_GET['id_medico'], FILTER_VALIDATE_INT);
     $fechaB = trim($_GET['fecha']);
     $fB = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaB, $zonaClinica);
@@ -223,7 +236,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        if (!$errores) {
+        if (!$errores && $moduloPagos) {
+            try {
+                $operacion=cvp_clave($_POST['operacion'] ?? null);
+                if (($_SESSION['cvp_formularios'][$operacion] ?? null)!=='alta_cita') throw new DomainException('El formulario venció. Recarga la página.');
+                $nuevosDatos=$datos+['modalidad'=>'presencial'];
+                $idPago=cvp_reservar($conexion,(int)cvs_usuario_actual()['id_usuario'],$nuevosDatos,$operacion,cvs_texto($_POST,'precio_mostrado') ?: null);
+                cvp_redirigir_pago($idPago,'Cita registrada; importe acordado pendiente de cobro en recepción.');
+            } catch (Throwable $ex) { $errores[]=$ex instanceof DomainException ? $ex->getMessage() : cvp_error($ex,'alta_administrativa'); }
+        }
+        if (!$errores && !$moduloPagos) {
             try {
                 $conexion->beginTransaction();
                 // Verificaciones servidor
@@ -363,11 +385,13 @@ try {
 <main class="ui-contenido">
     <section class="panel">
         <h2>Registrar nueva cita</h2>
+        <?php if ($moduloPagos): ?><p>La nueva cita genera un pago presencial pendiente. Se requiere una tarifa configurada; el servidor conserva el importe acordado. <a href="tarifas.php">Consultar tarifas</a> · <a href="pagos.php">Pagos y cobros</a>.</p><?php endif; ?>
         <?php if ($aviso): ?><div class="mensaje"><?= e($aviso) ?></div><?php endif; ?>
         <?php foreach ($errores as $error): ?><div class="mensaje error"><?= e($error) ?></div><?php endforeach; ?>
-        <form method="post" action="citas.php" id="formCita" novalidate>
+        <form method="post" action="citas.php" id="formCita" data-medico="<?= e($datos['id_medico']) ?>" novalidate>
             <input type="hidden" name="csrf" value="<?= e($_SESSION['csrf_citas']) ?>">
             <input type="hidden" name="accion" value="registrar">
+            <?php if ($moduloPagos): ?><input type="hidden" name="operacion" value="<?= e(cvp_formulario('alta_cita')) ?>"><input type="hidden" name="precio_mostrado" id="precio_mostrado"><p id="precio-consulta" class="cvp-precio" aria-live="polite">Selecciona una consulta para ver su tarifa.</p><?php endif; ?>
             <input type="hidden" name="hora_inicio" id="hora_inicio_sel" value="<?= e($datos['hora_inicio']) ?>">
             <div class="campos">
                 <div>
@@ -497,9 +521,11 @@ try {
             for(const m of data){
                 const opt = document.createElement('option');
                 opt.value = m.id_medico;
-                opt.textContent = m.apellidos + ', ' + m.nombres + ' (' + m.registro_profesional + ')';
+                    opt.textContent = m.apellidos + ', ' + m.nombres + ' (' + m.registro_profesional + ')' + (m.importe === undefined ? '' : (m.importe === null ? ' · Sin tarifa' : ' · Bs ' + m.importe));
+                    opt.dataset.importe = m.importe || '';
                 med.appendChild(opt);
             }
+            if (form.dataset.medico) { med.value = form.dataset.medico; form.dataset.medico = ''; }
         } catch(e){
             med.innerHTML = '<option value="">Error al cargar médicos</option>';
         }
@@ -507,6 +533,13 @@ try {
     }
     
     async function cargarBloques(){
+        const horaAnterior = horaSel.value;
+        const precio = document.getElementById('precio-consulta');
+        const mostrado = document.getElementById('precio_mostrado');
+        if (precio && mostrado) {
+            mostrado.value = med.selectedOptions[0]?.dataset.importe || '';
+            precio.textContent = mostrado.value ? 'Importe: Bs ' + Number(mostrado.value).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2}) : 'Sin tarifa configurada: no se puede completar la reserva.';
+        }
         bloquesDiv.innerHTML = '<p style="color:#6b7f85">Cargando...</p>';
         horaSel.value = '';
         const mval = med.value;
@@ -533,6 +566,7 @@ try {
                     btn.classList.add('sel');
                     horaSel.value = b.hora_inicio;
                 };
+                if (b.hora_inicio === horaAnterior) { btn.classList.add('sel'); horaSel.value = b.hora_inicio; }
                 bloquesDiv.appendChild(btn);
             }
         } catch(e){
@@ -543,6 +577,7 @@ try {
     if(esp) esp.addEventListener('change', cargarMedicos);
     if(med) med.addEventListener('change', cargarBloques);
     if(fec) fec.addEventListener('change', cargarBloques);
+    if(esp && esp.value) cargarMedicos();
     
     if(form){
         form.addEventListener('submit', function(e){

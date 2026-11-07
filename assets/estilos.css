@@ -1077,3 +1077,98 @@ button.btn-sec:hover,.boton.btn-sec:hover{filter:none;background:#CEDEE3}
   .rep-h-track{grid-column:1/-1;grid-row:2}
   .rep-ctd{flex:0 0 12px}
 }
+
+/* Reservas y pagos: extensión del mismo sistema visual, sin dependencias externas. */
+.cvp-pasos{display:flex;flex-wrap:wrap;gap:12px 32px;padding-left:22px;margin:22px 0;color:var(--cv-2);font-weight:600}
+.cvp-precio{font-size:21px;font-weight:750;color:var(--cv-2);margin:16px 0}
+.cvp-bloques{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+.cvp-turno{position:relative;display:inline-flex;cursor:pointer}
+.cvp-turno input{position:absolute;opacity:0;width:1px;height:1px}
+.cvp-turno span{display:block;padding:10px 14px;border:1px solid var(--cv-marco);border-radius:12px;background:var(--cv-fondo)}
+.cvp-turno input:checked+span{background:var(--cv-2);border-color:var(--cv-2);color:#fff}
+.cvp-turno input:focus-visible+span{outline:3px solid var(--cv-4);outline-offset:3px}
+.cvp-opcion{display:flex;align-items:flex-start;gap:12px;padding:16px;border:1px solid var(--cv-marco);border-radius:14px;margin:12px 0;cursor:pointer}
+.cvp-opcion input{width:auto;flex:0 0 auto;margin-top:5px;accent-color:var(--cv-2)}
+.cvp-demo{border:1px solid var(--cv-marco);border-radius:12px;padding:12px;margin:16px 0;background:var(--cv-fondo);color:var(--cv-sub)}
+.cvp-demo p{margin:8px 0 0}
+.cvp-detalle>div{padding:10px 16px;border-bottom:1px solid var(--cv-marco)}
+.cvp-detalle dt,.cvp-detalle dd{float:none;width:auto;padding:0;margin:0;border:0;background:transparent}
+.cvp-detalle dt{font-size:12px;color:var(--cv-sub)}
+.cvp-detalle dd{font-weight:650;overflow-wrap:anywhere}
+.cvp-codigo{font-family:ui-monospace,monospace;font-size:16px;overflow-wrap:anywhere}
+.cvp-marca{font-weight:800;letter-spacing:.1em;color:var(--cv-2)}
+.cvp-ficha{max-width:850px;margin-left:auto;margin-right:auto}
+.cvp-tarifa{display:flex;gap:10px;align-items:end;min-width:250px}
+.cvp-tarifa input{max-width:165px}
+.cvp-filtros{margin:24px 0}
+.cvp-indicadores{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:22px 0}
+.cvp-indicadores .panel{padding:18px;margin:0}
+.cvp-indicadores h2{font-size:14px}
+@media(max-width:640px){.cvp-pasos{display:block}.cvp-pasos li{margin:8px 0}.cvp-opcion{padding:12px}.cvp-ficha{padding:18px}}
+@media print{
+  .cvp-no-imprimir,.cvs-marco,.cvs-topbar,.cvs-menu,.cvs-velo{display:none!important}
+  .ui-app{padding:0;display:block}.ui-contenido{padding:0;max-width:none}
+  .cvp-ficha{border:1px solid #bbb;box-shadow:none;max-width:none;margin:0;break-inside:avoid}
+  .cvp-demo{background:#fff!important;color:#333!important;border:2px dashed #555;print-color-adjust:exact}
+}
+
+/* Checkout y documentos: misma paleta, proporciones fluidas y datos sin recortar. */
+.cvp-area{min-width:0;width:100%}
+.cvp-area .panel{min-width:0}
+.cvp-area .tabla{max-width:100%;overflow-x:auto}
+.cvp-area .tabla table{min-width:0;width:100%;table-layout:auto}
+.cvp-area .tabla th,.cvp-area .tabla td{white-space:normal;overflow-wrap:anywhere;padding:12px 14px;vertical-align:top}
+.cvp-area .tabla td a{white-space:normal}
+.cvp-area .campo input,.cvp-area .campo select{min-height:46px;width:100%;max-width:100%}
+.cvp-area .campo{min-width:0;margin-bottom:14px}
+.cvp-area fieldset{min-width:0;border:1px solid var(--cv-marco);border-radius:14px;padding:16px;margin:16px 0}
+.cvp-area legend{font-weight:650;padding:0 8px}
+.cvp-prueba{display:block;width:fit-content;max-width:100%;padding:5px 10px;border:1px solid var(--cv-marco);border-radius:8px;color:var(--cv-sub);font-size:12px;background:var(--cv-fondo)}
+.cvp-submetodos{margin-left:28px!important;background:var(--cv-fondo)}
+.cvp-submetodos .cvp-opcion{background:white}
+.cvp-inactivo{opacity:.65}
+.cvp-checkout{max-width:620px;margin:22px auto;padding:28px}
+.cvp-checkout h1{margin:0;font-size:24px}
+.cvp-checkout-cabecera{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+.cvp-icono{font-size:36px;color:var(--cv-2)}
+.cvp-dos-columnas{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cvp-dos-columnas label{min-height:2.8em}
+.cvp-area .cvp-detalle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.cvp-total{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--cv-marco);padding-top:20px;gap:12px}
+.cvp-total strong{font-size:24px;color:var(--cv-2)}
+.cvp-pagar{width:100%;min-height:48px}
+.cvp-qr-panel{text-align:center;border-top:4px solid var(--cv-3)}
+.cvp-qr-panel .cvp-marca{font-size:12px;margin:0 0 8px}
+.cvp-qr-instrucciones{max-width:390px;margin:14px auto;color:var(--cv-sub)}
+.cvp-qr{width:320px;max-width:100%;margin:24px auto;padding:14px;border:1px solid var(--cv-marco);border-radius:16px;background:white;color:var(--cv-tinta);box-shadow:var(--cv-sombra)}
+.cvp-qr img{display:block;width:100%;height:auto}
+.cvp-qr-no-disponible{margin:0;padding:24px 8px;color:var(--cv-sub);font-size:14px}
+.cvp-qr-datos{margin:0;display:grid;gap:14px}
+.cvp-qr-datos dt{color:var(--cv-sub);font-size:13px}
+.cvp-qr-datos dd{margin:4px 0 0}
+.cvp-qr-datos .cvp-precio{font-size:32px;line-height:1.3}
+.cvp-qr-datos .cvp-codigo{font-size:15px;letter-spacing:.025em;line-height:1.6;user-select:all}
+.cvp-qr-consulta{color:var(--cv-sub);font-size:14px;margin:22px 0 16px}
+.cvp-qr-plazo{background:var(--cv-6);border:1px solid var(--cv-marco);border-radius:12px;padding:12px;color:var(--cv-1)}
+.cvp-qr-ficha{margin:24px 0;padding-top:14px;break-inside:avoid}
+.cvp-qr-ficha .cvp-qr{width:240px;box-shadow:none}
+.cvp-nota-academica{display:block;color:var(--cv-sub);font-size:12px}
+.cvp-qr-panel .acciones{justify-content:center}
+.cvp-checkout input[readonly]{background:var(--cv-fondo);color:var(--cv-tinta)}
+.cvp-ficha header{border-bottom:2px solid var(--cv-3);padding-bottom:18px;margin-bottom:22px}
+.cvp-ficha .cvp-detalle{display:grid;grid-template-columns:1fr 1fr}
+.cvp-ficha .cvp-detalle>div{min-width:0}
+.cvp-filtros{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}
+.cvp-filtros .campo{flex:1 1 160px;margin:0}
+.cvp-tarifa{min-width:200px;flex-wrap:wrap}
+@media(max-width:640px){
+  .cvp-checkout{padding:18px}.cvp-checkout h1{font-size:21px}
+  .cvp-submetodos{margin-left:0!important}.cvp-area .cvp-detalle{grid-template-columns:1fr}
+  .cvp-area .tabla th,.cvp-area .tabla td{padding:10px}
+  .cvp-area .tabla table{min-width:600px}
+  .cvp-area .acciones>*{max-width:100%}
+}
+@media print{
+  .cvp-prueba{display:block!important;color:#333;background:white;border:1px solid #999}
+  .cvp-ficha .cvp-detalle{grid-template-columns:1fr 1fr}
+}

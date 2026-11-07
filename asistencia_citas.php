@@ -9,6 +9,7 @@
 // - No crea reservas, no reprograma ni implementa una vista para médicos.
 declare(strict_types=1);
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/reservas_pagos.php';
 $usuario = cvs_exigir_roles(['administrador', 'recepcionista']);
 
 if (!in_array($_SERVER['REQUEST_METHOD'], ['GET', 'POST'], true)) {
@@ -74,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $conexion->beginTransaction();
+        if (cvp_disponible($conexion)) cvp_bloquear($conexion,(int)$usuario['id_usuario']);
         // Mismo orden de bloqueo que RF09. Evaluar la hora después de la espera.
         $bloquear = $conexion->prepare('SELECT id_cita FROM citas WHERE id_cita = :id FOR UPDATE');
         $bloquear->execute([':id'=>$id]);

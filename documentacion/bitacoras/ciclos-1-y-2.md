@@ -94,3 +94,32 @@ El `diff` del esquema entre ambos hitos no muestra cambios. El reflog puede no e
 La portada confirma **Durán Pérez Melissa** y **Vásquez Cordero Angélica Yandira**, Grupo 17, Sistemas de Información I, Universidad Autónoma Gabriel René Moreno. No se asignan cargos ni actividades por persona: los nombres de ramas o autores Git no bastan para establecer un reparto formal del trabajo académico. Se omiten identificadores estudiantiles y cualquier dato de acceso.
 
 Las futuras entradas deben conservar actividad, propósito, resultado y fuente. Para nuevas pruebas, registrar entorno y fecha realmente observados, datos ficticios y resultado esperado/obtenido sin contraseñas, tokens, cadenas privadas ni información clínica identificable.
+
+## Desarrollo posterior al Ciclo 2: reservas y pagos
+
+**04/11/2026 — desarrollo local, no despliegue.** Esta entrada complementa las bitácoras anteriores; no cambia sus resultados históricos.
+
+| Actividad | Propósito | Resultado observado | Evidencia |
+|---|---|---|---|
+| Revisar el árbol de trabajo y crear `feature/reservas-pagos` desde `ciclo2-desarrollo` | Aislar el incremento sin descartar los cambios documentales pendientes | Se conservaron las eliminaciones previas del índice y de la frase de roles en el README; los documentos originales permanecen | Estado y diferencias locales de Git; sin commit nuevo |
+| Diseñar y desarrollar la migración incremental | Añadir tarifas, bloqueos compartidos e historial financiero sin recrear tablas | Siete tablas nuevas, disparadores y restricciones; las exclusiones originales de citas/horarios permanecen | [Migración SQL](../../database/migraciones/20261104_reservas_pagos.sql) |
+| Implementar reserva propia, cobros y simulador autorizado | Habilitar autoservicio del paciente sin otorgarle control del resultado financiero | Pantallas integradas al menú y estilos; cobros presenciales separados de demostración; fichas, movimientos y reportes económicos | [Guía técnica e inventario](../RESERVAS_Y_PAGOS.md) |
+| Integrar cancelación, reprogramación, asistencia, agendas y registro administrativo | Mantener compatibilidad y preservar el importe acordado | Reprogramación conserva cobro; cancelación pendiente anula deuda y cancelación pagada solicita revisión, sin devolución automática | Lógica PHP y disparadores; P14–P15, P20, P25, H08–H09 del registro de pruebas |
+| Ejecutar pruebas seguras en un clúster nuevo, efímero y ligado a loopback | Comprobar flujos, permisos, importes, migración y concurrencia sin usar las bases reales | **40 casos OK**; incluye HTTP y tres pruebas con procesos/conexiones independientes. Sintaxis de 42 archivos PHP y de JavaScript comprobada | [Resultados JSON](../pruebas-reservas-pagos.json), [runner](../../tests/ejecutar_reservas_pagos.py) |
+| Documentar instalación manual y pendientes | Preparar la revisión conjunta antes de cualquier cambio de infraestructura | No se ejecutaron migraciones contra las bases principales, cobros reales ni despliegue; quedan pendientes interfaz visual/móvil, impresión y Docker | [Instrucciones locales y Render](../RESERVAS_Y_PAGOS.md) |
+
+La primera ejecución del runner encontró un bloqueo de captura de salida de `pg_ctl` en Windows; se detuvo únicamente el clúster temporal creado para esa ejecución y se corrigió el manejo de salida. Las ejecuciones posteriores finalizaron y detuvieron sus propios clústeres. No se presentan como realizadas las pruebas visuales ni una integración bancaria.
+
+No se asignan actividades a integrantes concretas ni se inventan reuniones, horas o resultados remotos. Los cambios permanecen locales para revisión; no se ejecutaron `git add`, `git commit` o `git push`.
+
+## 05/11/2026 — mejora profesional de pagos, posterior al Ciclo 2
+
+Se conservó el trabajo pendiente de `feature/reservas-pagos` y se amplió, sin reescribir la migración del 04/11. Se añadió una migración incremental para método en línea inmutable y solicitudes de tarjeta auditadas; los pagos históricos no se reetiquetan. No se accedió a credenciales privadas ni se modificaron las bases principales o Render.
+
+La interfaz separa pago en línea (tarjeta/QR) y presencial. Tarjeta utiliza marcadores sintéticos de solo lectura y una referencia controlada; el paciente solo puede solicitar procesamiento. Administración conserva la verificación de resultados. QR se genera localmente con `qrcode-generator` MIT, sin servicios externos, y contiene exclusivamente una referencia no autorizante.
+
+Se refinaron checkout, documentos, tablas, lenguaje y filtros económicos, conservando importe pactado, controles de cobro, vencimientos e historial. Fechas de presentación usan `America/La_Paz`; no se reduce la precisión almacenada. La indicación de pruebas es discreta y los libros continúan separados.
+
+Se amplió la suite aislada y se guardó [evidencia nueva](../pruebas-mejora-pagos.json), sin sobrescribir [los resultados del 04/11](../pruebas-reservas-pagos.json). Se ejecutaron recorridos de navegador con Edge/Chromium, validación del payload sin PAN/CVV, decodificación independiente del SVG QR con jsQR y comprobaciones responsive en 360/390/768/1440 px. La primera comprobación de fieldset necesitó ajustarse a su propiedad nativa `disabled`; la ejecución posterior completó los casos de navegador. No se afirma lectura por cámara física, impresión/PDF real, Docker o prueba en Render.
+
+Resultado observado: **50 comprobaciones OK**, incluidas cinco de navegador, y sintaxis PHP/JavaScript sin errores. La [guía técnica](../RESERVAS_Y_PAGOS.md#actualización-profesional--05112026) documenta archivos, dependencias, cómo inspeccionar migraciones, comandos de prueba y requisitos futuros de campos alojados/tokenización y verificación oficial en servidor. Sin publicación, staging ni commits.

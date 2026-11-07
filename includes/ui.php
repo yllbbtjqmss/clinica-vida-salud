@@ -24,6 +24,7 @@ function cvsu_icono(string $clave): string
         'mi_agenda' => 'agenda',
         'mis_citas' => 'citas',
         'usuarios' => 'pacientes',
+        'lista_espera' => 'historial',
     );
     $clave = $alias[$clave] ?? $clave;
 
@@ -84,6 +85,7 @@ function cvsu_paginas(?array $usuario): array
             array('Cancelar citas', 'cancelar_cita.php'),
             array('Control de asistencia', 'asistencia_citas.php'),
             array('Historial de citas', 'historial_citas.php'),
+            array('Lista de espera', 'lista_espera.php'),
             array('Agenda médica', 'agenda_medica.php'),
             array('Reportes', 'reportes.php'),
         ));
@@ -96,6 +98,7 @@ function cvsu_paginas(?array $usuario): array
             array('Cancelar citas', 'cancelar_cita.php'),
             array('Control de asistencia', 'asistencia_citas.php'),
             array('Historial de citas', 'historial_citas.php'),
+            array('Lista de espera', 'lista_espera.php'),
             array('Agenda médica', 'agenda_medica.php'),
         ));
     }

@@ -43,6 +43,12 @@ $citasDia = [];
 $maxMes = 0;
 $actividad = [];
 $disponibilidad = [];
+$disponibilidadMostrada = [];
+$fechaDisponibilidad = null;
+$idMedicoDisponibilidad = null;
+$medicoDisponibilidad = null;
+$bloquesDisponibilidad = [];
+$erroresDisponibilidad = [];
 
 if ($esPanel) {
     $hoy = cvsd_hoy();
@@ -52,6 +58,34 @@ if ($esPanel) {
     // Al seleccionar un dia, el calendario se sita en el mes de ese da.
     if (isset($_GET['dia']) && trim((string) $_GET['dia']) !== '') {
         $mesInicio = $diaSel->setDate((int) $diaSel->format('Y'), (int) $diaSel->format('n'), 1);
+    }
+
+    $fechaDisponibilidad = $hoy;
+    $fechaEntrada = $_GET['disp_fecha'] ?? '';
+    $fechaFiltro = is_string($fechaEntrada) ? trim($fechaEntrada) : '';
+    if (!is_string($fechaEntrada)) {
+        $erroresDisponibilidad[] = 'La fecha seleccionada no es válida.';
+    }
+    if ($fechaFiltro !== '') {
+        $fechaValidada = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaFiltro, $hoy->getTimezone());
+        if ($fechaValidada && $fechaValidada->format('Y-m-d') === $fechaFiltro && $fechaValidada >= $hoy) {
+            $fechaDisponibilidad = $fechaValidada;
+        } else {
+            $erroresDisponibilidad[] = 'La fecha debe ser válida y no puede ser anterior a hoy.';
+        }
+    }
+
+    $medicoEntrada = $_GET['disp_medico'] ?? '';
+    $medicoFiltro = is_string($medicoEntrada) ? trim($medicoEntrada) : '';
+    if (!is_string($medicoEntrada)) {
+        $erroresDisponibilidad[] = 'El médico seleccionado no es válido.';
+    }
+    if ($medicoFiltro !== '') {
+        if (ctype_digit($medicoFiltro) && (int) $medicoFiltro > 0) {
+            $idMedicoDisponibilidad = (int) $medicoFiltro;
+        } else {
+            $erroresDisponibilidad[] = 'El médico seleccionado no es válido.';
+        }
     }
 
     try {
@@ -66,7 +100,23 @@ if ($esPanel) {
         $citasDia = cvsd_citas_del_dia($pdo, $diaSel->format('Y-m-d'));
 
         $actividad = cvsd_actividad_reciente($pdo, 8);
-        $disponibilidad = cvsd_disponibilidad_del_dia($pdo, $hoy);
+        $disponibilidad = cvsd_disponibilidad_del_dia($pdo, $fechaDisponibilidad);
+        $disponibilidadMostrada = $disponibilidad;
+        if ($idMedicoDisponibilidad !== null) {
+            foreach ($disponibilidad as $medicoDisponible) {
+                if ((int) $medicoDisponible['id_medico'] === $idMedicoDisponibilidad) {
+                    $medicoDisponibilidad = $medicoDisponible;
+                    break;
+                }
+            }
+            if ($medicoDisponibilidad === null) {
+                $erroresDisponibilidad[] = 'El médico seleccionado no está activo o no existe.';
+                $idMedicoDisponibilidad = null;
+            } else {
+                $disponibilidadMostrada = [$medicoDisponibilidad];
+                $bloquesDisponibilidad = cvsd_bloques_medico($pdo, $idMedicoDisponibilidad, $fechaDisponibilidad);
+            }
+        }
     } catch (PDOException $ex) {
         error_log($ex->getMessage());
         $panelError = true;
@@ -75,6 +125,8 @@ if ($esPanel) {
         $citasDia = [];
         $actividad = [];
         $disponibilidad = [];
+        $disponibilidadMostrada = [];
+        $bloquesDisponibilidad = [];
     }
 
     $saludo = match (true) {
@@ -241,19 +293,42 @@ No hay citas registradas para este día.
 </section>
 
 <!-- DISPONIBILIDAD MÉDICA -->
-<section class="dash-panel" aria-labelledby="titulo-disp">
+<section class="dash-panel" id="disponibilidad-medica" aria-labelledby="titulo-disp">
 <div class="dash-cabecera">
 <span class="dash-cabecera-icono" aria-hidden="true"><?= cvsu_icono('medicos') ?></span>
 <h2 id="titulo-disp">Disponibilidad médica</h2>
 </div>
-<p class="dash-descripcion">Fecha consultada: <?= cvs_escapar(cvsd_formato_fecha_larga($hoy)) ?>. Se distingue tener horario de estar disponible: los turnos se calculan con los horarios activos y las citas programadas o confirmadas. No implica que el médico esté físicamente presente.</p>
+<form method="get" action="index.php#disponibilidad-medica" class="filtros">
+<input type="hidden" name="mes" value="<?= cvs_escapar($mesInicio->format('Y-m')) ?>">
+<input type="hidden" name="dia" value="<?= cvs_escapar($diaSel->format('Y-m-d')) ?>">
+<div class="campo">
+<label for="disp-medico">Médico</label>
+<select id="disp-medico" name="disp_medico">
+<option value="">Todos los médicos</option>
+<?php foreach ($disponibilidad as $medicoFiltroOpcion): ?>
+<?php $nombreOpcion = trim((string) $medicoFiltroOpcion['apellidos'] . ', ' . (string) $medicoFiltroOpcion['nombres'], ', '); ?>
+<option value="<?= cvs_escapar($medicoFiltroOpcion['id_medico']) ?>" <?= $idMedicoDisponibilidad === (int) $medicoFiltroOpcion['id_medico'] ? 'selected' : '' ?>><?= cvs_escapar($nombreOpcion !== '' ? $nombreOpcion : 'Nombre no registrado') ?></option>
+<?php endforeach; ?>
+</select>
+</div>
+<div class="campo">
+<label for="disp-fecha">Fecha</label>
+<input type="date" id="disp-fecha" name="disp_fecha" min="<?= cvs_escapar($hoy->format('Y-m-d')) ?>" value="<?= cvs_escapar($fechaDisponibilidad->format('Y-m-d')) ?>" required>
+</div>
+<button type="submit">Consultar</button>
+<a class="boton secundario" href="<?= cvs_escapar('index.php?' . http_build_query(['mes'=>$mesInicio->format('Y-m'), 'dia'=>$diaSel->format('Y-m-d')]) . '#disponibilidad-medica') ?>">Limpiar</a>
+</form>
+<?php foreach ($erroresDisponibilidad as $errorDisponibilidad): ?>
+<div class="mensaje advertencia" role="alert"><?= cvs_escapar($errorDisponibilidad) ?></div>
+<?php endforeach; ?>
+<p class="dash-descripcion">Fecha consultada: <?= cvs_escapar(cvsd_formato_fecha_larga($fechaDisponibilidad)) ?>. Se distingue tener horario de estar disponible: los turnos se calculan con los horarios activos y las citas programadas o confirmadas. No implica que el médico esté físicamente presente.</p>
 <?php if ($disponibilidad === []): ?>
 <div class="dash-hoy-vacio">
 <span aria-hidden="true"><?= cvsu_icono('medicos') ?></span>
 No hay médicos activos registrados todavía.
 </div>
 <?php else: ?>
-<?php foreach ($disponibilidad as $dm): ?>
+<?php foreach ($disponibilidadMostrada as $dm): ?>
 <div class="dash-med">
 <span class="dash-med-avatar" aria-hidden="true">
 <?php
@@ -303,6 +378,30 @@ if ($apellidoPila !== '' && $nombrePila !== '') {
 </div>
 </div>
 <?php endforeach; ?>
+<?php if ($medicoDisponibilidad !== null): ?>
+<h3>Bloques horarios de <?= cvs_escapar(trim($medicoDisponibilidad['nombres'] . ' ' . $medicoDisponibilidad['apellidos'])) ?></h3>
+<?php if ($bloquesDisponibilidad === []): ?>
+<p class="dash-med-estado-info">No tiene bloques en horarios activos para la fecha seleccionada.</p>
+<?php else: ?>
+<div class="bloques" aria-label="Bloques horarios del médico seleccionado">
+<?php foreach ($bloquesDisponibilidad as $bloque): ?>
+<?php
+$claseBloque = match ($bloque['estado']) {
+    'libre' => 'dash-turno-libre',
+    'ocupado' => 'dash-turno-completo',
+    default => 'dash-turno-sin-horario',
+};
+$textoBloque = match ($bloque['estado']) {
+    'libre' => 'LIBRE',
+    'ocupado' => 'OCUPADO',
+    default => 'NO DISPONIBLE',
+};
+?>
+<span class="dash-med-estado <?= cvs_escapar($claseBloque) ?>"><i></i><?= cvs_escapar($bloque['inicio'] . ' - ' . $bloque['fin'] . ' · ' . $textoBloque) ?></span>
+<?php endforeach; ?>
+</div>
+<?php endif; ?>
+<?php endif; ?>
 <?php endif; ?>
 </section>
 

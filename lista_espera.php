@@ -115,7 +115,211 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errores[] = 'Solicitud no válida. Recarga la página e inténtalo nuevamente.';
     } else {
         $accion = cvs_texto($_POST, 'accion');
-        if ($accion === 'registrar') {
+        if ($accion === 'asignar_turno') {
+            $idSolicitud = cvs_le_id($_POST['id_lista_espera'] ?? null);
+            $idCitaLiberada = cvs_le_id($_POST['id_cita_liberada'] ?? null);
+            if ($idSolicitud === 0 || $idCitaLiberada === 0
+                || ($_POST['confirmacion'] ?? null) !== '1') {
+                $errores[] = 'Confirma la asignación e indica una sugerencia válida.';
+            } else {
+                try {
+                    $conexion->beginTransaction();
+
+                    $permiso = $conexion->prepare('SELECT u.activo, r.nombre AS rol
+                        FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol
+                        WHERE u.id_usuario = :usuario FOR SHARE OF u, r');
+                    $permiso->execute([':usuario'=>$usuario['id_usuario']]);
+                    $identidad = $permiso->fetch(PDO::FETCH_ASSOC);
+                    if (!$identidad || !cvs_activo($identidad['activo'])
+                        || !in_array($identidad['rol'], ['administrador', 'recepcionista'], true)) {
+                        $conexion->rollBack();
+                        cvs_denegar_acceso();
+                    }
+
+                    $bloquearSolicitud = $conexion->prepare('SELECT id_lista_espera, id_paciente,
+                            id_especialidad, id_medico, fecha_desde, fecha_hasta, hora_desde,
+                            hora_hasta, estado
+                        FROM lista_espera WHERE id_lista_espera = :id FOR UPDATE');
+                    $bloquearSolicitud->execute([':id'=>$idSolicitud]);
+                    $solicitud = $bloquearSolicitud->fetch(PDO::FETCH_ASSOC);
+                    if (!$solicitud || $solicitud['estado'] !== 'activa') {
+                        throw new DomainException('La solicitud ya no está activa. Actualiza las sugerencias.');
+                    }
+
+                    $bloquearCita = $conexion->prepare("SELECT c.id_cita, c.id_medico, c.id_especialidad,
+                            c.fecha, c.hora_inicio, c.hora_fin, c.estado,
+                            (c.fecha + c.hora_inicio > timezone('America/La_Paz', clock_timestamp())) AS futura
+                        FROM citas c WHERE c.id_cita = :id FOR UPDATE OF c");
+                    $bloquearCita->execute([':id'=>$idCitaLiberada]);
+                    $citaLiberada = $bloquearCita->fetch(PDO::FETCH_ASSOC);
+                    if (!$citaLiberada || $citaLiberada['estado'] !== 'cancelada'
+                        || !cvs_activo($citaLiberada['futura'])) {
+                        throw new DomainException('El turno cancelado ya no está disponible.');
+                    }
+
+                    $fechaTurno = (string)$citaLiberada['fecha'];
+                    $horaInicioTexto = substr((string)$citaLiberada['hora_inicio'], 0, 8);
+                    $horaFinTexto = substr((string)$citaLiberada['hora_fin'], 0, 8);
+                    $inicioTurno = DateTimeImmutable::createFromFormat(
+                        '!Y-m-d H:i:s', $fechaTurno . ' ' . $horaInicioTexto, $zonaClinica
+                    );
+                    $finTurno = DateTimeImmutable::createFromFormat(
+                        '!Y-m-d H:i:s', $fechaTurno . ' ' . $horaFinTexto, $zonaClinica
+                    );
+                    if (!$inicioTurno || !$finTurno || $finTurno <= $inicioTurno
+                        || $inicioTurno <= new DateTimeImmutable('now', $zonaClinica)
+                        || (int)$solicitud['id_especialidad'] !== (int)$citaLiberada['id_especialidad']
+                        || ($solicitud['id_medico'] !== null
+                            && (int)$solicitud['id_medico'] !== (int)$citaLiberada['id_medico'])
+                        || $fechaTurno < (string)$solicitud['fecha_desde']
+                        || $fechaTurno > (string)$solicitud['fecha_hasta']
+                        || ($solicitud['hora_desde'] !== null
+                            && (substr((string)$solicitud['hora_desde'], 0, 5) > substr($horaInicioTexto, 0, 5)
+                                || substr((string)$solicitud['hora_hasta'], 0, 5) < substr($horaFinTexto, 0, 5)))) {
+                        throw new DomainException('La sugerencia ya no coincide con las preferencias activas.');
+                    }
+
+                    $bloquearPaciente = $conexion->prepare('SELECT id_paciente
+                        FROM pacientes WHERE id_paciente = :id AND activo = TRUE FOR UPDATE');
+                    $bloquearPaciente->execute([':id'=>(int)$solicitud['id_paciente']]);
+                    if (!$bloquearPaciente->fetchColumn()) {
+                        throw new DomainException('El paciente de la solicitud ya no está activo.');
+                    }
+
+                    $validarMedico = $conexion->prepare('SELECT 1
+                        FROM medicos m
+                        JOIN medico_especialidad me ON me.id_medico = m.id_medico
+                        JOIN especialidades e ON e.id_especialidad = me.id_especialidad
+                        WHERE m.id_medico = :medico AND e.id_especialidad = :especialidad
+                            AND m.activo = TRUE AND e.activo = TRUE
+                        FOR SHARE OF m, me, e');
+                    $validarMedico->execute([
+                        ':medico'=>(int)$citaLiberada['id_medico'],
+                        ':especialidad'=>(int)$citaLiberada['id_especialidad'],
+                    ]);
+                    if (!$validarMedico->fetchColumn()) {
+                        throw new DomainException('El médico o la especialidad ya no están activos o vinculados.');
+                    }
+
+                    $bloquearHorarios = $conexion->prepare('SELECT hora_inicio, hora_fin, duracion_minutos
+                        FROM horarios
+                        WHERE id_medico = :medico AND dia_semana = :dia AND activo = TRUE
+                        FOR SHARE');
+                    $bloquearHorarios->execute([
+                        ':medico'=>(int)$citaLiberada['id_medico'],
+                        ':dia'=>(int)$inicioTurno->format('N'),
+                    ]);
+                    $horarios = $bloquearHorarios->fetchAll(PDO::FETCH_ASSOC);
+                    $horarioValido = false;
+                    foreach ($horarios as $horario) {
+                        $horaHorarioInicio = substr((string)$horario['hora_inicio'], 0, 8);
+                        $horaHorarioFin = substr((string)$horario['hora_fin'], 0, 8);
+                        $inicioHorario = DateTimeImmutable::createFromFormat(
+                            '!Y-m-d H:i:s', $fechaTurno . ' ' . $horaHorarioInicio, $zonaClinica
+                        );
+                        $finHorario = DateTimeImmutable::createFromFormat(
+                            '!Y-m-d H:i:s', $fechaTurno . ' ' . $horaHorarioFin, $zonaClinica
+                        );
+                        $duracion = (int)$horario['duracion_minutos'];
+                        if (!$inicioHorario || !$finHorario || $duracion < 1
+                            || $inicioTurno < $inicioHorario || $finTurno > $finHorario) {
+                            continue;
+                        }
+                        $segundosDesdeInicio = $inicioTurno->getTimestamp() - $inicioHorario->getTimestamp();
+                        if ($segundosDesdeInicio >= 0 && $segundosDesdeInicio % ($duracion * 60) === 0
+                            && $inicioTurno->modify('+' . $duracion . ' minutes')->format('H:i:s') === $horaFinTexto) {
+                            $horarioValido = true;
+                            break;
+                        }
+                    }
+                    if (!$horarioValido) {
+                        throw new DomainException('El turno cancelado ya no corresponde a un horario activo del médico.');
+                    }
+
+                    $conflictoMedico = $conexion->prepare("SELECT id_cita FROM citas
+                        WHERE id_medico = :medico AND fecha = :fecha
+                            AND estado IN ('programada', 'confirmada')
+                            AND hora_inicio < CAST(:hora_fin AS TIME)
+                            AND hora_fin > CAST(:hora_inicio AS TIME)
+                        FOR UPDATE");
+                    $conflictoMedico->execute([
+                        ':medico'=>(int)$citaLiberada['id_medico'],
+                        ':fecha'=>$fechaTurno,
+                        ':hora_inicio'=>$horaInicioTexto,
+                        ':hora_fin'=>$horaFinTexto,
+                    ]);
+                    if ($conflictoMedico->fetchColumn()) {
+                        throw new DomainException('El turno ya fue reservado. Actualiza las sugerencias.');
+                    }
+
+                    $conflictoPaciente = $conexion->prepare("SELECT id_cita FROM citas
+                        WHERE id_paciente = :paciente AND fecha = :fecha
+                            AND estado IN ('programada', 'confirmada')
+                            AND hora_inicio < CAST(:hora_fin AS TIME)
+                            AND hora_fin > CAST(:hora_inicio AS TIME)
+                        FOR UPDATE");
+                    $conflictoPaciente->execute([
+                        ':paciente'=>(int)$solicitud['id_paciente'],
+                        ':fecha'=>$fechaTurno,
+                        ':hora_inicio'=>$horaInicioTexto,
+                        ':hora_fin'=>$horaFinTexto,
+                    ]);
+                    if ($conflictoPaciente->fetchColumn()) {
+                        throw new DomainException('El paciente ya tiene otra cita en ese horario.');
+                    }
+
+                    $codigo = 'CITA-' . strtoupper(bin2hex(random_bytes(4))) . '-'
+                        . (new DateTimeImmutable('now', $zonaClinica))->format('Ymd');
+                    $crearCita = $conexion->prepare("INSERT INTO citas
+                        (codigo, id_paciente, id_medico, id_especialidad, fecha, hora_inicio,
+                            hora_fin, motivo, estado, creado_en, actualizado_en)
+                        VALUES (:codigo, :paciente, :medico, :especialidad, :fecha,
+                            CAST(:hora_inicio AS TIME), CAST(:hora_fin AS TIME), NULL, 'programada',
+                            timezone('America/La_Paz', clock_timestamp()),
+                            timezone('America/La_Paz', clock_timestamp()))
+                        RETURNING id_cita");
+                    $crearCita->execute([
+                        ':codigo'=>$codigo,
+                        ':paciente'=>(int)$solicitud['id_paciente'],
+                        ':medico'=>(int)$citaLiberada['id_medico'],
+                        ':especialidad'=>(int)$citaLiberada['id_especialidad'],
+                        ':fecha'=>$fechaTurno,
+                        ':hora_inicio'=>$horaInicioTexto,
+                        ':hora_fin'=>$horaFinTexto,
+                    ]);
+                    $idCitaAsignada = (int)$crearCita->fetchColumn();
+
+                    $marcarAsignada = $conexion->prepare("UPDATE lista_espera
+                        SET estado = 'asignada', id_cita_asignada = :cita,
+                            actualizado_en = timezone('America/La_Paz', clock_timestamp())
+                        WHERE id_lista_espera = :solicitud AND estado = 'activa'");
+                    $marcarAsignada->execute([
+                        ':cita'=>$idCitaAsignada,
+                        ':solicitud'=>$idSolicitud,
+                    ]);
+                    if ($marcarAsignada->rowCount() !== 1) {
+                        throw new DomainException('La solicitud ya no está activa. No se asignó el turno.');
+                    }
+
+                    $conexion->commit();
+                    cvs_le_redirigir('exito', 'Turno asignado correctamente. Código de cita: ' . $codigo . '.');
+                } catch (DomainException $ex) {
+                    if ($conexion->inTransaction()) $conexion->rollBack();
+                    cvs_le_redirigir('advertencia', $ex->getMessage());
+                } catch (PDOException $ex) {
+                    if ($conexion->inTransaction()) $conexion->rollBack();
+                    if (in_array((string)$ex->getCode(), ['23P01', '23505', '40001', '40P01'], true)) {
+                        cvs_le_redirigir('advertencia', 'El turno o la solicitud cambiaron durante la asignación. Actualiza las sugerencias.');
+                    }
+                    cvs_le_registrar_error($ex, 'asignar_turno');
+                    cvs_le_redirigir('error', 'No fue posible asignar el turno. No se guardó ningún cambio.');
+                } catch (Throwable $ex) {
+                    if ($conexion->inTransaction()) $conexion->rollBack();
+                    cvs_le_registrar_error($ex, 'asignar_turno');
+                    cvs_le_redirigir('error', 'No fue posible asignar el turno. No se guardó ningún cambio.');
+                }
+            }
+        } elseif ($accion === 'registrar') {
             foreach (['id_paciente', 'id_especialidad', 'id_medico', 'fecha_desde', 'hora_desde', 'hora_hasta'] as $campo) {
                 $datos[$campo] = cvs_texto($_POST, $campo);
             }
@@ -341,6 +545,62 @@ try {
 
 $csrf = cvs_csrf_token();
 $filtros = ['buscar'=>$busqueda, 'estado'=>$estadoFiltro, 'pagina'=>$pagina];
+$sugerencias = [];
+try {
+    $consultaSugerencias = $conexion->query("WITH vacantes AS (
+        SELECT DISTINCT ON (c.id_medico, c.fecha, c.hora_inicio, c.hora_fin)
+            c.id_cita, c.id_medico, c.id_especialidad, c.fecha, c.hora_inicio, c.hora_fin
+        FROM citas c
+        WHERE c.estado = 'cancelada'
+            AND c.fecha + c.hora_inicio > timezone('America/La_Paz', clock_timestamp())
+            AND EXISTS (
+                SELECT 1 FROM horarios h
+                WHERE h.id_medico = c.id_medico
+                    AND h.dia_semana = EXTRACT(ISODOW FROM c.fecha)::SMALLINT
+                    AND h.activo = TRUE
+                    AND c.hora_inicio >= h.hora_inicio
+                    AND c.hora_fin <= h.hora_fin
+                    AND c.hora_fin = c.hora_inicio + h.duracion_minutos * INTERVAL '1 minute'
+                    AND MOD(EXTRACT(EPOCH FROM (c.hora_inicio - h.hora_inicio)),
+                        h.duracion_minutos * 60) = 0
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM citas ocupada
+                WHERE ocupada.id_medico = c.id_medico AND ocupada.fecha = c.fecha
+                    AND ocupada.estado IN ('programada', 'confirmada')
+                    AND ocupada.hora_inicio < c.hora_fin AND ocupada.hora_fin > c.hora_inicio
+            )
+        ORDER BY c.id_medico, c.fecha, c.hora_inicio, c.hora_fin, c.id_cita
+    )
+    SELECT le.id_lista_espera, v.id_cita AS id_cita_liberada, v.fecha,
+        v.hora_inicio, v.hora_fin, le.creado_en,
+        p.nombres || ' ' || p.apellidos AS paciente,
+        e.nombre AS especialidad, m.nombres || ' ' || m.apellidos AS medico
+    FROM lista_espera le
+    JOIN vacantes v ON v.id_especialidad = le.id_especialidad
+        AND v.fecha BETWEEN le.fecha_desde AND le.fecha_hasta
+        AND (le.id_medico IS NULL OR le.id_medico = v.id_medico)
+        AND (le.hora_desde IS NULL OR
+            (le.hora_desde <= v.hora_inicio AND le.hora_hasta >= v.hora_fin))
+    JOIN pacientes p ON p.id_paciente = le.id_paciente AND p.activo = TRUE
+    JOIN medicos m ON m.id_medico = v.id_medico AND m.activo = TRUE
+    JOIN especialidades e ON e.id_especialidad = v.id_especialidad AND e.activo = TRUE
+    WHERE le.estado = 'activa'
+        AND EXISTS (SELECT 1 FROM medico_especialidad me
+            WHERE me.id_medico = v.id_medico AND me.id_especialidad = v.id_especialidad)
+        AND NOT EXISTS (
+            SELECT 1 FROM citas ocupada
+            WHERE ocupada.id_paciente = le.id_paciente AND ocupada.fecha = v.fecha
+                AND ocupada.estado IN ('programada', 'confirmada')
+                AND ocupada.hora_inicio < v.hora_fin AND ocupada.hora_fin > v.hora_inicio
+        )
+    ORDER BY le.creado_en, le.id_lista_espera, v.fecha, v.hora_inicio, v.id_cita
+    LIMIT 100");
+    $sugerencias = $consultaSugerencias->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $ex) {
+    cvs_le_registrar_error($ex, 'consultar_sugerencias');
+    $errores[] = 'No fue posible consultar las sugerencias de turnos liberados.';
+}
 ?>
 <!doctype html>
 <html lang="es">
@@ -358,6 +618,36 @@ $filtros = ['buscar'=>$busqueda, 'estado'=>$estadoFiltro, 'pagina'=>$pagina];
 <div class="mensaje <?= ($flash['tipo'] ?? '') === 'advertencia' ? 'advertencia' : '' ?>" role="status"><?= cvs_escapar($flash['mensaje']) ?></div>
 <?php endif; ?>
 <?php foreach ($errores as $error): ?><div class="error" role="alert"><?= cvs_escapar($error) ?></div><?php endforeach; ?>
+
+<section class="panel" aria-labelledby="titulo-sugerencias">
+<h2 id="titulo-sugerencias">Turnos liberados: sugerencias priorizadas</h2>
+<p>Se muestran turnos futuros liberados por cancelación que siguen disponibles y coinciden con las solicitudes activas. El orden prioriza la solicitud más antigua.</p>
+<?php if (!$sugerencias): ?><p role="status">No hay sugerencias de asignación disponibles.</p><?php else: ?>
+<div class="tabla" tabindex="0" role="region" aria-label="Sugerencias de turnos liberados"><table><thead><tr><th>Paciente</th><th>Especialidad</th><th>Médico</th><th>Turno liberado</th><th>Solicitud registrada</th><th>Confirmación</th></tr></thead><tbody>
+<?php foreach ($sugerencias as $sugerencia): ?>
+<?php $idConfirmacion = 'confirmar-asignacion-' . (int)$sugerencia['id_lista_espera'] . '-' . (int)$sugerencia['id_cita_liberada']; ?>
+<tr>
+<td><?= cvs_escapar($sugerencia['paciente']) ?></td>
+<td><?= cvs_escapar($sugerencia['especialidad']) ?></td>
+<td><?= cvs_escapar($sugerencia['medico']) ?></td>
+<td><?= cvs_escapar($sugerencia['fecha'] . ' · ' . substr($sugerencia['hora_inicio'], 0, 5) . ' a ' . substr($sugerencia['hora_fin'], 0, 5)) ?></td>
+<td><?= cvs_escapar(substr($sugerencia['creado_en'], 0, 16)) ?></td>
+<td>
+<form method="post" action="lista_espera.php">
+<input type="hidden" name="csrf" value="<?= cvs_escapar($csrf) ?>">
+<input type="hidden" name="accion" value="asignar_turno">
+<input type="hidden" name="id_lista_espera" value="<?= (int)$sugerencia['id_lista_espera'] ?>">
+<input type="hidden" name="id_cita_liberada" value="<?= (int)$sugerencia['id_cita_liberada'] ?>">
+<label for="<?= cvs_escapar($idConfirmacion) ?>"><input id="<?= cvs_escapar($idConfirmacion) ?>" type="checkbox" name="confirmacion" value="1" required> Confirmo la asignación</label>
+<button type="submit">Asignar turno</button>
+</form>
+</td>
+</tr>
+<?php endforeach; ?>
+</tbody></table></div>
+<?php if (count($sugerencias) === 100): ?><p class="pequeno">Se muestran las 100 sugerencias más antiguas que coinciden.</p><?php endif; ?>
+<?php endif; ?>
+</section>
 
 <section class="panel" aria-labelledby="titulo-registro">
 <h2 id="titulo-registro">Registrar solicitud de espera</h2>

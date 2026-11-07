@@ -268,6 +268,77 @@ function cvsd_disponibilidad_del_dia(PDO $pdo, DateTimeImmutable $fecha): array
     return $salida;
 }
 
+/** Bloques completos de un médico activo para consultar su disponibilidad. */
+function cvsd_bloques_medico(PDO $pdo, int $idMedico, DateTimeImmutable $fecha): array
+{
+    $stmtH = $pdo->prepare('SELECT hora_inicio, hora_fin, duracion_minutos
+                            FROM horarios
+                            WHERE id_medico = :id_medico AND dia_semana = :dia AND activo = TRUE
+                            ORDER BY hora_inicio');
+    $stmtH->bindValue(':id_medico', $idMedico, PDO::PARAM_INT);
+    $stmtH->bindValue(':dia', (int) $fecha->format('N'), PDO::PARAM_INT);
+    $stmtH->execute();
+
+    $stmtC = $pdo->prepare("SELECT hora_inicio, hora_fin
+                            FROM citas
+                            WHERE id_medico = :id_medico AND fecha = :fecha
+                              AND estado IN ('programada', 'confirmada')");
+    $stmtC->bindValue(':id_medico', $idMedico, PDO::PARAM_INT);
+    $stmtC->bindValue(':fecha', $fecha->format('Y-m-d'), PDO::PARAM_STR);
+    $stmtC->execute();
+    $ocupadas = $stmtC->fetchAll();
+
+    $esHoy = $fecha->format('Y-m-d') === cvsd_hoy()->format('Y-m-d');
+    $ahora = $esHoy ? cvsd_ahora($fecha->getTimezone()) : null;
+    $bloques = [];
+
+    foreach ($stmtH->fetchAll() as $horario) {
+        $duracion = (int) $horario['duracion_minutos'];
+        $inicio = DateTimeImmutable::createFromFormat('H:i:s', $horario['hora_inicio'])
+            ?: DateTimeImmutable::createFromFormat('H:i', substr((string) $horario['hora_inicio'], 0, 5));
+        $fin = DateTimeImmutable::createFromFormat('H:i:s', $horario['hora_fin'])
+            ?: DateTimeImmutable::createFromFormat('H:i', substr((string) $horario['hora_fin'], 0, 5));
+        if ($duracion <= 0 || !$inicio || !$fin) {
+            continue;
+        }
+
+        $cursor = $fecha->setTime((int) $inicio->format('H'), (int) $inicio->format('i'));
+        $finHorario = $fecha->setTime((int) $fin->format('H'), (int) $fin->format('i'));
+        while ($cursor < $finHorario) {
+            $finBloque = $cursor->modify('+' . $duracion . ' minutes');
+            if ($finBloque > $finHorario) {
+                break;
+            }
+
+            $estado = $ahora !== null && $cursor <= $ahora ? 'no_disponible' : 'libre';
+            foreach ($ocupadas as $ocupada) {
+                $inicioOcupado = DateTimeImmutable::createFromFormat('H:i:s', $ocupada['hora_inicio'])
+                    ?: DateTimeImmutable::createFromFormat('H:i', substr((string) $ocupada['hora_inicio'], 0, 5));
+                $finOcupado = DateTimeImmutable::createFromFormat('H:i:s', $ocupada['hora_fin'])
+                    ?: DateTimeImmutable::createFromFormat('H:i', substr((string) $ocupada['hora_fin'], 0, 5));
+                if (!$inicioOcupado || !$finOcupado) {
+                    continue;
+                }
+                $inicioOcupado = $fecha->setTime((int) $inicioOcupado->format('H'), (int) $inicioOcupado->format('i'));
+                $finOcupado = $fecha->setTime((int) $finOcupado->format('H'), (int) $finOcupado->format('i'));
+                if (!($finBloque <= $inicioOcupado || $cursor >= $finOcupado)) {
+                    $estado = 'ocupado';
+                    break;
+                }
+            }
+
+            $bloques[] = [
+                'inicio' => $cursor->format('H:i'),
+                'fin' => $finBloque->format('H:i'),
+                'estado' => $estado,
+            ];
+            $cursor = $finBloque;
+        }
+    }
+
+    return $bloques;
+}
+
 /** Valida el parámetro de mes 'YYYY-MM' y devuelve el primer día del mes.
  * Devuelve el mes actual de Bolivia si el valor no es válido.
  */

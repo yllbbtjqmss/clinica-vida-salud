@@ -320,18 +320,6 @@ Durante el desarrollo se comprobó el funcionamiento, la seguridad y la integrac
 
 Las pruebas automatizadas utilizaron **bases aisladas y datos ficticios**; no modificaron la base de producción. La prueba manual en Render se realizó por separado.
 
-### Evidencias
-
-- [Resultados de las pruebas de reservas y pagos](documentacion/pruebas-mejora-pagos.json)
-- [Integración local de Lumi y lista de espera](documentacion/LUMI_INTEGRACION_LOCAL.md)
-- [Pruebas visuales de Lumi](tests/lumi_visual.cjs)
-
-Para repetir la suite de reservas y pagos en un entorno local preparado:
-
-```powershell
-python tests\ejecutar_reservas_pagos.py --evidencia documentacion\pruebas-mejora-pagos.json
-```
-
 ---
 
 <a id="bitacoras-del-proyecto"></a>
@@ -364,26 +352,12 @@ Las bitácoras documentan las etapas principales del desarrollo, desde la primer
 **Integrantes**
 
 - **Durán Pérez Melissa** — 224052349
-- **Vásquez Cordero Angélica Yandira** — 224029460
+- **Vasquez Cordero Angelica Yandira** — 224029460
 
 **Universidad:** Universidad Autónoma Gabriel René Moreno (UAGRM)  
 **Facultad:** Ingeniería en Ciencias de la Computación y Telecomunicaciones  
 **Materia:** Sistemas de Información I  
 **Docente:** MSc. Ing. Angélica Gazón Cuéllar  
-**Lugar:** Santa Cruz de la Sierra, Bolivia
-
-Clínica Vida Salud fue desarrollado como proyecto académico, aplicando conocimientos de análisis, diseño, programación, bases de datos e integración de tecnologías web.
-
-<a id="documentacion-tecnica"></a>
-
-## Documentación técnica complementaria
-
-- [Guía técnica de reservas y pagos](documentacion/RESERVAS_Y_PAGOS.md): funcionamiento, migraciones y pruebas.
-- [Simulación de pago mediante QR](documentacion/QR_PAGO_FIJO.md): explicación del QR de demostración.
-- [Integración de Lumi y lista de espera](documentacion/LUMI_INTEGRACION_LOCAL.md): chat, voz, roles y navegación.
-- [Despliegue en Render](deploy/DESPLIEGUE.md): configuración y publicación.
-- [Revisión del despliegue](deploy/REVISION.md): comprobaciones técnicas.
-- [Informe académico del Ciclo 1](documentacion/Ciclo_1_Grupo_17/Informe_Clinica_Vida_Salud_Ciclo_1.pdf): documentación de la primera etapa.
 
 ---
 
